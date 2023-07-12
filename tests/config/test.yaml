@@ -1,0 +1,57 @@
+subsets:
+  - query_list_file: ./tags.txt
+    output_path: "./high quality"
+    limit: 100
+
+    caption:
+      extension: "txt"
+
+      artist_tags: false
+      character_tags: true
+      copyright_tags: true
+      general_tags:
+        replaces:
+          - tags: ["cat ears"]
+            to: nekomimi
+
+      common:
+        inserts:
+          - tags:
+              - masterpiece
+            position: start
+        deletes:
+          - tags:
+              - black
+
+      rating:
+        - type: by_tag # by_rating, none
+
+    filter:
+      score:
+        min: 10
+        # max: 100
+      date:
+        # start: 2019-01-23
+        # end: 2021-12-23
+      age:
+        min: 1weeks
+        # max: 30days
+      tag_count:
+        min: 10
+        # max: 200
+      filetypes:
+        - png
+
+  - query: "1girl, cat ears, score:>20"
+    output_path: "./cat ears"
+    limit: 50
+
+filter:
+  filetypes:
+    - png
+    - jpg
+    - webp
+    # - gif
+
+max_workers: 10
+caption_extension: "txt"

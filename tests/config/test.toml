@@ -1,0 +1,47 @@
+[[subsets]]
+limit = 100
+output_path = "./high quality"
+tag_list_file = "./tags.txt"
+
+[subsets.filter]
+
+filetypes = ["png"]
+
+[subsets.filter.score]
+max = 100
+min = 10
+
+# [subsets.filter.date]
+# end = "2021-12-23"
+# start = "2019-01-23"
+
+[subsets.filter.age]
+max = "30days"
+min = "1weeks"
+
+[subsets.filter.tag_counnt]
+min = 10
+# max = 200
+
+[[subsets.post_process.inserts]]
+position = "start"
+tags = ["masterpiece"]
+
+[[subsets.post_process.inserts]]
+position = "end"
+tags = ["semi-realistic style"]
+
+[[subsets.post_process.replaces]]
+tags = ["cat ears"]
+to = "nekomimi"
+
+[[subsets.post_process.deletes]]
+tags = ["dog ears", "animal ears"]
+
+[[subsets]]
+limit = 50
+output_path = "./cat ears"
+query = "1girl, cat ears, score:>20"
+
+[filter]
+filetypes = ["png", "jpg", "webp"]

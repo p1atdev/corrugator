@@ -1,0 +1,54 @@
+{
+    "subsets": [
+        {
+            "tag_list_file": "./tags.txt",
+            "output_path": "./high quality",
+            "limit": 100,
+            "filter": {
+                "score": {
+                    "min": 10
+                },
+                "date": {},
+                "age": {
+                    "min": "1weeks"
+                },
+                "tag_count": {
+                    "min": 10
+                },
+                "filetypes": ["png"]
+            },
+            "post_process": {
+                "inserts": [
+                    {
+                        "tags": ["masterpiece"],
+                        "position": "start"
+                    },
+                    {
+                        "tags": ["semi-realistic style"],
+                        "position": "end"
+                    }
+                ],
+                "replaces": [
+                    {
+                        "tags": ["cat ears"],
+                        "to": "nekomimi"
+                    }
+                ],
+                "deletes": [
+                    {
+                        "tags": ["dog ears", "animal ears"]
+                    }
+                ]
+            }
+        },
+        {
+            "query": "1girl, cat ears, score:>20",
+            "output_path": "./cat ears",
+            "limit": 50,
+            "filter": {}
+        }
+    ],
+    "filter": {
+        "filtetypes": ["png", "jpg", "webp"]
+    }
+}
