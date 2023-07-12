@@ -90,12 +90,14 @@ class DanbooruPostItem:
 
     def compose_tags(self) -> str:
         return ", ".join(
-            [
+            tag
+            for tag in [
                 *self.artist_tags,
                 *self.character_tags,
                 *self.general_tags,
                 *self.meta_tags,
             ]
+            if tag.strip() != ""
         )
 
 
@@ -142,6 +144,10 @@ def get_posts(
                 for post in scraper.get_posts(query, page, limit_per_page)
                 if post.md5 is not None
             ]
+
+            if len(new_posts) == 0:
+                break
+
             for post in new_posts:
                 all_tags = (
                     post.artist_tags

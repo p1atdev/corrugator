@@ -120,15 +120,11 @@ def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionCo
         else:
             config = CaptionConfig()
     item.rating_tags = create_rating_tag(item.general_tags, item.post, config.rating)
-    item.artist_tags = do_caption_post_process(item.artist_tags, config.artist_tags)
-    item.character_tags = do_caption_post_process(
-        item.character_tags, config.character_tags
-    )
-    item.copyright_tags = do_caption_post_process(
-        item.copyright_tags, config.copyright_tags
-    )
-    item.general_tags = do_caption_post_process(item.general_tags, config.general_tags)
-    item.meta_tags = do_caption_post_process(item.meta_tags, config.meta_tags)
+    item.artist_tags = do_caption_post_process(item.artist_tags, config.artist)
+    item.character_tags = do_caption_post_process(item.character_tags, config.character)
+    item.copyright_tags = do_caption_post_process(item.copyright_tags, config.copyright)
+    item.general_tags = do_caption_post_process(item.general_tags, config.general)
+    item.meta_tags = do_caption_post_process(item.meta_tags, config.meta)
 
 
 def create_rating_tag(

@@ -78,11 +78,11 @@ class CaptionConfig(BaseModel):
     overwrite: bool = False
 
     # False は使用しない、True　はすべて使用、 それ以外は CaptionPostProcessConfig の処理を実行
-    artist_tags: bool | CaptionPostProcessConfig = False
-    character_tags: bool | CaptionPostProcessConfig = True
-    copyright_tags: bool | CaptionPostProcessConfig = True
-    general_tags: bool | CaptionPostProcessConfig = True
-    meta_tags: bool | CaptionPostProcessConfig = CaptionPostProcessConfig(
+    artist: bool | CaptionPostProcessConfig = False
+    character: bool | CaptionPostProcessConfig = True
+    copyright: bool | CaptionPostProcessConfig = True
+    general: bool | CaptionPostProcessConfig = True
+    meta: bool | CaptionPostProcessConfig = CaptionPostProcessConfig(
         keeps=[
             KeepConfig(tags=utils.load_file_lines(ALLOWED_META_TAGS_FILE)),
         ]

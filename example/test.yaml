@@ -1,17 +1,13 @@
 subsets:
-  - query: "1girl cat_ears"
-    search_filter:
-      score:
-        min: 100
-    output_path: "./output/cat ears"
+  - query: "1girl, cat ears, score:>20"
+    output_path: "./cat ears"
     limit: 50
 
-search_filter:
+filter:
   filetypes:
-    # - png
+    - png
     - jpg
-    # - webp
+    - webp
     # - gif
 
 max_workers: 10
-caption_extension: "txt"
