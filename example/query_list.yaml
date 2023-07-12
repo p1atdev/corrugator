@@ -5,7 +5,7 @@ subsets:
     output_path: "./output/query_list_example"
     limit: 50
 
-    caption: false
+    caption: false # do not save caption file
 
 search_filter:
   filetypes:

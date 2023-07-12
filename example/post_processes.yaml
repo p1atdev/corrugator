@@ -1,16 +1,22 @@
 subsets:
   - query: "cat_ears"
-    output_path: "./output/cat ears"
+    output_path: "./output/post_processes"
     limit: 50
-    caption:
-      artist_tags: false
-      copyright_tags: false
-      character_tags: true
-      general_tags:
-        replaces:
-          - tags: ["cat ears"]
-            to: "nekomimi"
 
-    search_result_filter:
-      include_any: ["solo"]
-      exclude_any: ["2girls", "3girls"]
+caption:
+  artist: false
+  copyright: false
+  character: true
+  general:
+    replaces:
+      - tags: ["cat ears"]
+        to: "nekomimi"
+  meta:
+    keeps:
+      - tags: "./config/allowed_meta_tags.txt" # delete all tags except these tags
+
+search_result_filter:
+  include_any: ["solo"]
+  exclude_any: ["2girls", "3girls"]
+
+max_workers: 4
