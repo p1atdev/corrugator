@@ -5,18 +5,25 @@ import requests
 from urllib import parse
 import json
 
+from tqdm import tqdm
 
+import utils
 from danbooru_post import DanbooruPost
-from scrape_config import AVAIABLE_DOMAINS, ScrapeSubset, CaptionConfig
+from scrape_config import (
+    AVAIABLE_DOMAINS,
+    ScrapeSubset,
+    CaptionConfig,
+    SearchResultFilterConfig,
+)
 
-from default_tags import DEFAULT_EXLUSION_META_TAGS, KAOMOJI_TAGS
+from default_tags import EXCLUSION_TAGS_FILE, KAOMOJI_TAGS_FILE
 
 
 # _ ありの空白区切りから _ なしの配列にする
 def parse_general_tags(tag_text: str) -> list[str]:
     tags = tag_text.split(" ")
     for i, tag in enumerate(tags):
-        if not tag in KAOMOJI_TAGS:
+        if not tag in utils.load_file_lines(EXCLUSION_TAGS_FILE):
             tags[i] = tag.replace("_", " ")
     return tags
 
@@ -109,8 +116,8 @@ class ScrapeResultCache:
 def get_posts(
     scraper: DanbooruScraper,
     query: str,
-    exclusion_general_tags: list[str] = [],
-    exclusion_meta_tags: list[str] = DEFAULT_EXLUSION_META_TAGS,
+    search_result_filter: Optional[bool | SearchResultFilterConfig],
+    fallback_search_result_filter: SearchResultFilterConfig,
     total_limit: int = 100,
     limit_per_page: int = 200,
 ) -> list[DanbooruPostItem]:
@@ -118,20 +125,55 @@ def get_posts(
     page = 1
     limit_per_page = 200
 
-    while len(posts) < total_limit:
-        new_posts = [
-            DanbooruPostItem(post)
-            for post in scraper.get_posts(query, page, limit_per_page)
-            if post.md5 is not None
-        ]
-        new_posts = [
-            post
-            for post in new_posts
-            if not any(tag in exclusion_general_tags for tag in post.general_tags)
-            and not any(tag in exclusion_meta_tags for tag in post.meta_tags)
-        ]
-        posts += new_posts
-        page += 1
+    result_filter = fallback_search_result_filter
+    if search_result_filter is not None:
+        if isinstance(search_result_filter, bool):
+            if search_result_filter:
+                pass  # デフォルト値
+            else:
+                result_filter = None
+        else:
+            result_filter = search_result_filter
+
+    with tqdm(total=total_limit) as pbar:
+        while len(posts) < total_limit:
+            new_posts = [
+                DanbooruPostItem(post)
+                for post in scraper.get_posts(query, page, limit_per_page)
+                if post.md5 is not None
+            ]
+            for post in new_posts:
+                all_tags = (
+                    post.artist_tags
+                    + post.character_tags
+                    + post.copyright_tags
+                    + post.general_tags
+                    + post.meta_tags
+                )
+
+                if result_filter.include_any != [] and all(
+                    tag not in result_filter.include_any for tag in all_tags
+                ):
+                    continue  # どれも入っていなかったら
+                if result_filter.include_all != [] and any(
+                    tag not in result_filter.include_all for tag in all_tags
+                ):
+                    continue  # ひとつでも入っていなかったら
+                if result_filter.exclude_any != [] and any(
+                    tag in result_filter.exclude_any for tag in all_tags
+                ):
+                    continue  # どれか入っていたら
+                if result_filter.exclude_all != [] and all(
+                    tag in result_filter.exclude_all for tag in all_tags
+                ):
+                    continue  # 全部入っていたら
+
+                # OKなら追加
+                posts.append(post)
+
+                pbar.update(1)
+
+            page += 1
 
     return posts[:total_limit]
 
@@ -198,7 +240,6 @@ def save_post_captions(
     items: list[DanbooruPostItem],
     caches: list[ScrapeResultCache],
     fallback_caption_config: CaptionConfig,
-    pbar,
 ) -> None:
     for item, cache in zip(items, caches):
         if isinstance(cache.caption, bool):
@@ -220,29 +261,14 @@ def save_post_captions(
             config.extension,
             config.overwrite,
         )
-        pbar.update(1)
 
 
-def process_post_cache(
+def save_from_cache(
     chunk: list[DanbooruPostItem],
     caches: list[ScrapeResultCache],
     fallback_caption_config: CaptionConfig,
     pbar,
 ) -> None:
-    save_post_captions(chunk, caches, fallback_caption_config, pbar)
+    save_post_captions(chunk, caches, fallback_caption_config)
 
     download_post_images(chunk, caches, pbar)
-
-
-def load_query_list_file(file: str | Path) -> list[str]:
-    with open(file, "r", encoding="utf-8") as f:
-        return [
-            line.strip().replace(" ", "_")
-            for line in f.readlines()
-            if line.strip() != ""
-        ]
-
-
-def load_url_list_file(file: str | Path) -> list[str]:
-    with open(file, "r", encoding="utf-8") as f:
-        return [line.strip() for line in f.readlines() if line.strip() != ""]

@@ -4,12 +4,9 @@ import sys
 
 sys.path.append("..")
 
+import utils
 from scrape_util import DanbooruScraper, get_posts
-from tags import (
-    SENSITIVE_TAGS,
-    VIOLENCE_TAGS,
-    DEFAULT_EXLUSION_META_TAGS,
-)
+from default_tags import EXCLUSION_TAGS_FILE, SENSITIVE_TAGS_FILE, VIOLENCE_TAGS_FILE
 
 
 class TestScrapeUtil(unittest.TestCase):
@@ -26,17 +23,31 @@ class TestScrapeUtil(unittest.TestCase):
         posts = get_posts(
             scraper,
             "2girls",
-            exclusion_general_tags=SENSITIVE_TAGS + VIOLENCE_TAGS,
+            exclusion_general_tags=utils.load_file_lines(SENSITIVE_TAGS_FILE)
+            + utils.load_file_lines(VIOLENCE_TAGS_FILE),
             total_limit=1000,
         )
 
         self.assertEqual(len(posts), 1000)
 
         for post in posts:
-            self.assertFalse(any(tag in SENSITIVE_TAGS for tag in post.general_tags))
-            self.assertFalse(any(tag in VIOLENCE_TAGS for tag in post.general_tags))
             self.assertFalse(
-                any(tag in DEFAULT_EXLUSION_META_TAGS for tag in post.meta_tags)
+                any(
+                    tag in utils.load_file_lines(SENSITIVE_TAGS_FILE)
+                    for tag in post.general_tags
+                )
+            )
+            self.assertFalse(
+                any(
+                    tag in utils.load_file_lines(VIOLENCE_TAGS_FILE)
+                    for tag in post.general_tags
+                )
+            )
+            self.assertFalse(
+                any(
+                    tag in utils.load_file_lines(EXCLUSION_TAGS_FILE)
+                    for tag in post.meta_tags
+                )
             )
 
 

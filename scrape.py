@@ -7,14 +7,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 from tags import do_all_caption_post_process
 from query import compose_query
+import utils
+import scrape_util
 from scrape_util import (
     DanbooruScraper,
     ScrapeResultCache,
-    get_posts,
-    load_query_list_file,
-    load_url_list_file,
-    get_domain_and_post_id_from_url,
-    process_post_cache,
 )
 from scrape_config import (
     load_scrape_config,
@@ -24,7 +21,7 @@ from scrape_config import (
     PostListSubset,
     CaptionConfig,
 )
-from default_tags import DEFAULT_EXLUSION_META_TAGS
+from default_tags import EXCLUSION_TAGS_FILE
 
 
 def main(config: ScrapeConfig):
@@ -44,14 +41,16 @@ def main(config: ScrapeConfig):
             print("Loading query...")
             scraper = DanbooruScraper(subset.domain or config.domain)
 
-            query = compose_query(subset.query, subset.filter, config.filter)
+            query = compose_query(
+                subset.query, subset.search_filter, config.search_filter
+            )
             print("Query: " + query)
 
-            posts = get_posts(
+            posts = scrape_util.get_posts(
                 scraper,
                 query,
-                exclusion_general_tags=[],
-                exclusion_meta_tags=DEFAULT_EXLUSION_META_TAGS,
+                subset.search_result_filter,
+                config.search_result_filter,
                 total_limit=subset.limit,
                 limit_per_page=200,
             )
@@ -62,16 +61,16 @@ def main(config: ScrapeConfig):
         elif isinstance(subset, QueryListSubset):
             print("Loading query list...")
             scraper = DanbooruScraper(subset.domain or config.domain)
-            queries = load_query_list_file(subset.query_list_file)
+            queries = utils.load_file_lines(subset.query_list_file)
 
             for query in queries:
                 print("Query: " + query)
 
-                posts = get_posts(
+                posts = scrape_util.get_posts(
                     scraper,
                     query,
-                    exclusion_general_tags=[],
-                    exclusion_meta_tags=DEFAULT_EXLUSION_META_TAGS,
+                    subset.search_result_filter,
+                    config.search_result_filter,
                     total_limit=subset.limit,
                     limit_per_page=200,
                 )
@@ -81,14 +80,14 @@ def main(config: ScrapeConfig):
                 caches.append(ScrapeResultCache(posts, subset))
         elif isinstance(subset, PostListSubset):
             print("Loading post urls...")
-            post_urls = load_url_list_file(subset.post_url_list_file)
+            post_urls = utils.load_file_lines(subset.post_url_list_file)
 
             print(f"Found {len(post_urls)} posts")
 
             posts = []
 
             for url in post_urls:
-                domain, post_id = get_domain_and_post_id_from_url(url)
+                domain, post_id = scrape_util.get_domain_and_post_id_from_url(url)
                 scraper = DanbooruScraper(domain)
 
                 posts.append(scraper.get_post(post_id))
@@ -106,17 +105,17 @@ def main(config: ScrapeConfig):
                 # fallback
                 item = do_all_caption_post_process(item, config.caption)
 
-    print("Downloading images...")
-
     for cache in caches:
         chunks = np.array_split(cache.items, config.max_workers)
+
+        print(f"Downloading {len(cache.items)} images...")
 
         with tqdm(total=len(cache.items)) as pbar:
             with ThreadPoolExecutor(max_workers=config.max_workers) as executor:
                 futures = []
                 for chunk in chunks:
                     executor.submit(
-                        process_post_cache,
+                        scrape_util.save_from_cache,
                         chunk,
                         [cache] * len(chunk),
                         config.caption,

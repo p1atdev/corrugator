@@ -1,0 +1,26 @@
+lowres
+highres
+absurdres
+incredibly absurdres
+cropped
+bad aspect ratio
+jpeg artifacts
+tall image
+wide image
+ai-generated
+ai-assisted
+anime screencap
+game screenshot
+screenshot
+eyecatch
+end card
+game cg
+novel illustration
+official art
+game model
+key visual
+production art
+scan
+scan dust
+binding discoloration
+avatar generator

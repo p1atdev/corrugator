@@ -1,0 +1,17 @@
+domain: "danbooru.donmai.us"
+
+subsets:
+  - query_list_file: "./example/query_list.txt"
+    output_path: "./output/query_list_example"
+    limit: 50
+
+    caption: false
+
+search_filter:
+  filetypes:
+    - png
+    - jpg
+    - webp
+    # - gif
+
+max_workers: 10

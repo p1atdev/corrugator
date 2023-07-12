@@ -1,12 +1,11 @@
 from typing import Literal, Optional
 
+import utils
 
 from danbooru_post import Rating
-
 from scrape_util import DanbooruPostItem
 
 from scrape_config import CaptionPostProcessConfig, RatingTagConfig, CaptionConfig
-from default_tags import SENSITIVE_TAGS, ALLOWED_META_TAGS
 
 INSERT_POSITION = Literal["start", "end"]
 
@@ -16,19 +15,19 @@ DEFAULT_FILETYPES: list[FILETYPE] = ["jpg", "png", "webp", "avif"]
 
 
 def normalize_tags(tags: str | list[str]) -> list[str]:
-    return [tags] if isinstance(tags, str) else tags
+    if isinstance(tags, str):
+        return utils.load_file_lines(tags)
+    else:
+        return tags
 
 
 def is_nsfw(
-    tags: list[str], nsfw_tags: Optional[str | list[str]] = SENSITIVE_TAGS
+    tags: list[str],
+    nsfw_tags: Optional[str | list[str]],
 ) -> bool:
     if nsfw_tags is None:
         return False
     return any(tag in nsfw_tags for tag in tags)
-
-
-def filter_meta_tags(tags: list[str]) -> list[str]:
-    return [tag for tag in tags if tag in ALLOWED_META_TAGS]
 
 
 def process_replace(

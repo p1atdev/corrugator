@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, Literal
 
-from scrape_config import FilterConfig
+from scrape_config import SearchFilterConfig
 from tags import FILETYPE
 
 
@@ -74,8 +74,20 @@ def filetype_query(filetypes: list[FILETYPE] = None) -> str:
 
 
 def compose_query(
-    base_query: str, filter: FilterConfig, fallback_filter: FilterConfig
+    base_query: str,
+    filter: Optional[bool | SearchFilterConfig],
+    fallback_filter: SearchFilterConfig,
 ) -> str:
+    if filter is None:
+        filter = fallback_filter
+    if isinstance(filter, bool):
+        if filter:
+            filter = SearchFilterConfig()  # デフォルト値
+        else:
+            return base_query  # なにもしない
+    else:
+        filter = filter
+
     query = [base_query]
 
     if filter.score is not None:

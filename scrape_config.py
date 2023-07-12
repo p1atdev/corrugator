@@ -1,15 +1,16 @@
-from typing import Optional, Literal, Union
+from typing import Optional, Literal
 
 from pydantic import BaseModel
 import yaml
 import json
 import toml
 
-
+import utils
 from default_tags import (
-    SENSITIVE_TAGS,
-    NSFW_TAG,
-    ALLOWED_META_TAGS,
+    SENSITIVE_TAGS_FILE,
+    NSFW_PREFIX_FILE,
+    ALLOWED_META_TAGS_FILE,
+    EXCLUSION_TAGS_FILE,
 )
 
 AVAIABLE_DOMAINS = Literal["danbooru.donmai.us", "safebooru.donmai.us"]
@@ -18,13 +19,20 @@ INSERT_POSITION = Literal["start", "end"]
 RATING_TAG_ACTION = Literal["by_tag", "by_rating", "none"]
 
 
+# tags で str の場合は強制的にファイルパスとみなし、そのファイルを読みに行く
+
+
 # レーティング (nsfwなど) タグ設定
 class RatingTagConfig(BaseModel):
     type: RATING_TAG_ACTION = "by_tag"  # 推奨
 
     # by_tag (事前に設定したタグが含まれる場合のみ nsfw判定。投稿のレーティングは無視される)
-    nsfw_tags: list[str] = SENSITIVE_TAGS
-    insert_tags: str | list[str] = NSFW_TAG
+    nsfw_tags: str | list[str] = utils.load_file_lines(SENSITIVE_TAGS_FILE)
+    insert_tags: str | list[str] = utils.load_file_lines(NSFW_PREFIX_FILE)
+
+    # こちらが指定されたらこっちを優先
+    nsfw_tag_file_path: Optional[str] = None
+    insert_tag_file_path: Optional[str] = None
 
     # by_rating (非推奨)
     explicit: Optional[str] = "explicit"
@@ -76,21 +84,13 @@ class CaptionConfig(BaseModel):
     general_tags: bool | CaptionPostProcessConfig = True
     meta_tags: bool | CaptionPostProcessConfig = CaptionPostProcessConfig(
         keeps=[
-            KeepConfig(tags=ALLOWED_META_TAGS),
+            KeepConfig(tags=utils.load_file_lines(ALLOWED_META_TAGS_FILE)),
         ]
     )
 
     rating: bool | RatingTagConfig = RatingTagConfig()
 
     common: Optional[CaptionPostProcessConfig] = None
-
-
-# 検索後のフィルター (検索結果数に影響する)
-class ResultPostProcessConfig(BaseModel):
-    must_include: list[str] = []  # 含んではならない
-    must_exclude: list[str] = []  # 含んでいなければならない
-
-    # TODO: parent や children などの判定もする
 
 
 # 検索時のフィルター (人的スコア)
@@ -118,7 +118,7 @@ class TagCountFilterConfig(BaseModel):
 
 
 # 検索時のフィルター設定
-class FilterConfig(BaseModel):
+class SearchFilterConfig(BaseModel):
     score: Optional[ScoreFilterConfig] = None
     date: Optional[DateFilterConfig] = None
     age: Optional[AgeFilterConfig] = None
@@ -126,6 +126,19 @@ class FilterConfig(BaseModel):
     filetypes: Optional[list[str]] = None
 
     # TODO: ソート順の対応
+
+
+# 検索後のフィルター (検索結果数に影響する)
+class SearchResultFilterConfig(BaseModel):
+    # 上から順に適用される
+    include_any: str | list[str] = []  # どれかを含んでいなければならない
+    include_all: str | list[str] = []  # すべてを含んでいなければならない
+    exclude_any: str | list[str] = utils.load_file_lines(
+        EXCLUSION_TAGS_FILE
+    )  # ひとつでも含んではいけない
+    exclude_all: str | list[str] = []  # すべて含んでいるのはだめ
+
+    # TODO: parent や children などの判定もする
 
 
 class ScrapeSubset(BaseModel):
@@ -143,14 +156,16 @@ class ScrapeSubset(BaseModel):
 class QuerySubset(ScrapeSubset):
     query: str
 
-    filter: Optional[FilterConfig] = FilterConfig()
+    search_filter: Optional[SearchFilterConfig] = None
+    search_result_filter: Optional[SearchResultFilterConfig] = None
 
 
 # 事前に用意した検索ワードのリストファイルを使って検索
 class QueryListSubset(ScrapeSubset):
     query_list_file: str
 
-    filter: Optional[FilterConfig] = FilterConfig()
+    search_filter: Optional[SearchFilterConfig] = None
+    search_result_filter: Optional[SearchResultFilterConfig] = None
 
 
 # danbooru の post の url リストから取得する
@@ -163,11 +178,16 @@ class PostListSubset(ScrapeSubset):
 class ScrapeConfig(BaseModel):
     domain: AVAIABLE_DOMAINS = "danbooru.donmai.us"
 
+    # TODO: 認証情報の対応
+
     subsets: list[QuerySubset | QueryListSubset | PostListSubset]
 
     # サブセットで指定されなかったらこっちにフォールバックされる
     caption: bool | CaptionConfig = False
-    filter: Optional[FilterConfig] = FilterConfig()
+    search_filter: Optional[SearchFilterConfig] = SearchFilterConfig()
+    search_result_filter: Optional[
+        SearchResultFilterConfig
+    ] = SearchResultFilterConfig()
 
     max_workers: int = 10
 
