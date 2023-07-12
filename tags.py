@@ -5,7 +5,7 @@ from danbooru_post import Rating
 
 from scrape_util import DanbooruPostItem
 
-from scrape_config import PostProcessConfig, RatingTagConfig, CaptionConfig
+from scrape_config import CaptionPostProcessConfig, RatingTagConfig, CaptionConfig
 from default_tags import SENSITIVE_TAGS, ALLOWED_META_TAGS
 
 INSERT_POSITION = Literal["start", "end"]
@@ -89,7 +89,7 @@ def process_insert(
 
 
 def do_caption_post_process(
-    original: list[str], config: PostProcessConfig | bool
+    original: list[str], config: CaptionPostProcessConfig | bool
 ) -> list[str]:
     tags = original
 

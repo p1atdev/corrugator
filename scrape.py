@@ -103,6 +103,7 @@ def main(config: ScrapeConfig):
         if cache.caption is not None:
             for item in cache.items:
                 item = do_all_caption_post_process(item, cache.caption)
+                # fallback
                 item = do_all_caption_post_process(item, config.caption)
 
     print("Downloading images...")
