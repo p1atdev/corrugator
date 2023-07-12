@@ -116,7 +116,7 @@ def do_caption_post_process(
 def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionConfig):
     if isinstance(config, bool):
         if not config:
-            return
+            return item
         else:
             config = CaptionConfig()
     item.rating_tags = create_rating_tag(item.general_tags, item.post, config.rating)
@@ -125,6 +125,8 @@ def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionCo
     item.copyright_tags = do_caption_post_process(item.copyright_tags, config.copyright)
     item.general_tags = do_caption_post_process(item.general_tags, config.general)
     item.meta_tags = do_caption_post_process(item.meta_tags, config.meta)
+
+    return item
 
 
 def create_rating_tag(
