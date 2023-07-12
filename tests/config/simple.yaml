@@ -1,5 +1,0 @@
-subsets:
-  - query: "1girl, cat ears, score:>50"
-    output_path: "./cat ears"
-    limit: 50
-    caption: True

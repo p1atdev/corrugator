@@ -5,8 +5,8 @@ import numpy as np
 
 from concurrent.futures import ThreadPoolExecutor
 
+from tags import do_all_caption_post_process
 from query import compose_query
-from tags import do_post_process, create_rating_tag
 from scrape_util import (
     DanbooruScraper,
     ScrapeResultCache,
@@ -22,12 +22,18 @@ from scrape_config import (
     QuerySubset,
     QueryListSubset,
     PostListSubset,
+    CaptionConfig,
 )
 from default_tags import DEFAULT_EXLUSION_META_TAGS
 
 
 def main(config: ScrapeConfig):
     print(config)
+
+    # 事前の初期値設定
+    if isinstance(config.caption, bool):
+        if config.caption:
+            config.caption = CaptionConfig()
 
     print("Starting scrape...")
 
@@ -96,22 +102,8 @@ def main(config: ScrapeConfig):
     for cache in caches:
         if cache.caption is not None:
             for item in cache.items:
-                item.rating_tags = create_rating_tag(
-                    item.general_tags, item.post, cache.caption.rating
-                )
-                item.artist_tags = do_post_process(
-                    item.artist_tags, cache.caption.artist_tags
-                )
-                item.character_tags = do_post_process(
-                    item.character_tags, cache.caption.character_tags
-                )
-                item.copyright_tags = do_post_process(
-                    item.copyright_tags, cache.caption.copyright_tags
-                )
-                item.general_tags = do_post_process(
-                    item.general_tags, cache.caption.general_tags
-                )
-                item.meta_tags = do_post_process(item.meta_tags, config.caption)
+                item = do_all_caption_post_process(item, cache.caption)
+                item = do_all_caption_post_process(item, config.caption)
 
     print("Downloading images...")
 
@@ -126,6 +118,7 @@ def main(config: ScrapeConfig):
                         process_post_cache,
                         chunk,
                         [cache] * len(chunk),
+                        config.caption,
                         pbar,
                     )
 

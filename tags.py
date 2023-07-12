@@ -5,7 +5,7 @@ from danbooru_post import Rating
 
 from scrape_util import DanbooruPostItem
 
-from scrape_config import PostProcessConfig, RatingTagConfig
+from scrape_config import PostProcessConfig, RatingTagConfig, CaptionConfig
 from default_tags import SENSITIVE_TAGS, ALLOWED_META_TAGS
 
 INSERT_POSITION = Literal["start", "end"]
@@ -88,7 +88,9 @@ def process_insert(
         raise Exception("Invalid position: " + position)
 
 
-def do_post_process(original: list[str], config: PostProcessConfig | bool) -> list[str]:
+def do_caption_post_process(
+    original: list[str], config: PostProcessConfig | bool
+) -> list[str]:
     tags = original
 
     if isinstance(config, bool):
@@ -110,6 +112,24 @@ def do_post_process(original: list[str], config: PostProcessConfig | bool) -> li
         tags = process_insert(tags, insert.tags, insert.position)
 
     return tags
+
+
+def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionConfig):
+    if isinstance(config, bool):
+        if not config:
+            return
+        else:
+            config = CaptionConfig()
+    item.rating_tags = create_rating_tag(item.general_tags, item.post, config.rating)
+    item.artist_tags = do_caption_post_process(item.artist_tags, config.artist_tags)
+    item.character_tags = do_caption_post_process(
+        item.character_tags, config.character_tags
+    )
+    item.copyright_tags = do_caption_post_process(
+        item.copyright_tags, config.copyright_tags
+    )
+    item.general_tags = do_caption_post_process(item.general_tags, config.general_tags)
+    item.meta_tags = do_caption_post_process(item.meta_tags, config.meta_tags)
 
 
 def create_rating_tag(

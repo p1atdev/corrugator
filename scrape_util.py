@@ -5,6 +5,7 @@ import requests
 from urllib import parse
 import json
 
+
 from danbooru_post import DanbooruPost
 from scrape_config import AVAIABLE_DOMAINS, ScrapeSubset, CaptionConfig
 
@@ -94,7 +95,7 @@ class DanbooruPostItem:
 class ScrapeResultCache:
     output_path: str
     save_state_path: Optional[str] = None
-    caption: Optional[CaptionConfig] = None
+    caption: Optional[bool | CaptionConfig] = False
 
     items: list[DanbooruPostItem]
 
@@ -196,10 +197,18 @@ def save_caption(
 def save_post_captions(
     items: list[DanbooruPostItem],
     caches: list[ScrapeResultCache],
+    fallback_caption_config: CaptionConfig,
     pbar,
 ) -> None:
     for item, cache in zip(items, caches):
-        config = cache.caption
+        if isinstance(cache.caption, bool):
+            if not cache.caption:
+                continue  # キャプションを保存しない
+            else:
+                cache.caption = CaptionConfig()  # デフォルト値
+
+        config = fallback_caption_config if cache.caption is None else cache.caption
+
         output_dir = cache.output_path
 
         Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -215,9 +224,12 @@ def save_post_captions(
 
 
 def process_post_cache(
-    chunk: list[DanbooruPostItem], caches: list[ScrapeResultCache], pbar
+    chunk: list[DanbooruPostItem],
+    caches: list[ScrapeResultCache],
+    fallback_caption_config: CaptionConfig,
+    pbar,
 ) -> None:
-    save_post_captions(chunk, caches, pbar)
+    save_post_captions(chunk, caches, fallback_caption_config, pbar)
 
     download_post_images(chunk, caches, pbar)
 

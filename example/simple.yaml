@@ -1,0 +1,5 @@
+subsets:
+  - query: "1girl cat_ears score:>50"
+    output_path: "./output/cat ears"
+    limit: 50
+    caption: False
