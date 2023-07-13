@@ -52,7 +52,7 @@ def process_keep(original: list[str], keep: Optional[str | list[str]]) -> list[s
     new_tags = []
 
     for tag in original:
-        if tag not in normalize_tags(keep):
+        if tag in normalize_tags(keep):
             new_tags.append(tag)
 
     return new_tags
