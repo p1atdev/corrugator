@@ -149,7 +149,7 @@ class ScrapeSubset(BaseModel):
     save_state_path: Optional[str] = None
 
     limit: int = 100
-    caption: bool | CaptionConfig = False
+    caption: Optional[bool | CaptionConfig] = None
 
 
 # シンプルに検索ワードで検索
