@@ -101,11 +101,11 @@ def main(config: ScrapeConfig):
     # caption post process
     print("Analyzing captions...")
     for cache in caches:
-        if cache.caption is not None:
-            for item in cache.items:
+        for item in cache.items:
+            if cache.caption is not None:
                 item = do_all_caption_post_process(item, cache.caption)
-                # fallback
-                item = do_all_caption_post_process(item, config.caption)
+            # fallback
+            item = do_all_caption_post_process(item, config.caption)
 
     for cache in caches:
         chunks = np.array_split(cache.items, config.max_workers)
