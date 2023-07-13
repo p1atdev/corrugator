@@ -119,6 +119,7 @@ def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionCo
             return item
         else:
             config = CaptionConfig()
+
     item.rating_tags = create_rating_tag(item.general_tags, item.post, config.rating)
     item.artist_tags = do_caption_post_process(item.artist_tags, config.artist)
     item.character_tags = do_caption_post_process(item.character_tags, config.character)

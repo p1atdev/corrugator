@@ -64,6 +64,8 @@ def main(config: ScrapeConfig):
             queries = utils.load_file_lines(subset.query_list_file)
 
             for query in queries:
+                query = compose_query(query, subset.search_filter, config.search_filter)
+
                 print("Query: " + query)
 
                 posts = scrape_util.get_posts(

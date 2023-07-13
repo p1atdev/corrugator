@@ -78,45 +78,29 @@ def compose_query(
     filter: Optional[bool | SearchFilterConfig],
     fallback_filter: SearchFilterConfig,
 ) -> str:
-    if filter is None:
-        filter = fallback_filter
     if isinstance(filter, bool):
         if filter:
             filter = SearchFilterConfig()  # デフォルト値
         else:
             return base_query  # なにもしない
-    else:
-        filter = filter
+
+    filter = fallback_filter if filter is None else filter
 
     query = [base_query]
 
     if filter.score is not None:
         query.append(score_query(filter.score.min, filter.score.max))
-    elif fallback_filter.score is not None:
-        query.append(score_query(fallback_filter.score.min, fallback_filter.score.max))
 
     if filter.date is not None:
         query.append(date_query(filter.date.start, filter.date.end))
-    elif fallback_filter.date is not None:
-        query.append(date_query(fallback_filter.date.start, fallback_filter.date.end))
 
     if filter.age is not None:
         query.append(age_query(filter.age.min, filter.age.max))
-    elif fallback_filter.age is not None:
-        query.append(age_query(fallback_filter.age.min, fallback_filter.age.max))
 
     if filter.tag_count is not None:
         query.append(tag_count_query(filter.tag_count.min, filter.tag_count.max))
-    elif fallback_filter.tag_count is not None:
-        query.append(
-            tag_count_query(
-                fallback_filter.tag_count.min, fallback_filter.tag_count.max
-            )
-        )
 
     if filter.filetypes is not None:
         query.append(filetype_query(filter.filetypes))
-    elif fallback_filter.filetypes is not None:
-        query.append(filetype_query(fallback_filter.filetypes))
 
     return " ".join(query)

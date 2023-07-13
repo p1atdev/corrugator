@@ -92,6 +92,7 @@ class DanbooruPostItem:
         return ", ".join(
             tag
             for tag in [
+                *self.rating_tags,
                 *self.artist_tags,
                 *self.character_tags,
                 *self.general_tags,
