@@ -21,7 +21,6 @@ from scrape_config import (
     PostListSubset,
     CaptionConfig,
 )
-from default_tags import EXCLUSION_TAGS_FILE
 
 
 def main(config: ScrapeConfig):
@@ -39,7 +38,7 @@ def main(config: ScrapeConfig):
     for subset in config.subsets:
         if isinstance(subset, QuerySubset):
             print("Loading query...")
-            scraper = DanbooruScraper(subset.domain or config.domain)
+            scraper = DanbooruScraper(subset.domain or config.domain, config.auth)
 
             query = compose_query(
                 subset.query, subset.search_filter, config.search_filter
@@ -60,7 +59,7 @@ def main(config: ScrapeConfig):
             caches.append(ScrapeResultCache(posts, subset))
         elif isinstance(subset, QueryListSubset):
             print("Loading query list...")
-            scraper = DanbooruScraper(subset.domain or config.domain)
+            scraper = DanbooruScraper(subset.domain or config.domain, config.auth)
             queries = utils.load_file_lines(subset.query_list_file)
 
             for query in queries:
@@ -90,7 +89,7 @@ def main(config: ScrapeConfig):
 
             for url in post_urls:
                 domain, post_id = scrape_util.get_domain_and_post_id_from_url(url)
-                scraper = DanbooruScraper(domain)
+                scraper = DanbooruScraper(domain, config.auth)
 
                 posts.append(scraper.get_post(post_id))
 
@@ -120,7 +119,7 @@ def main(config: ScrapeConfig):
                         scrape_util.save_from_cache,
                         chunk,
                         [cache] * len(chunk),
-                        config.caption,
+                        config,
                         pbar,
                     )
 

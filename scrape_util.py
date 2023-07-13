@@ -11,9 +11,11 @@ import utils
 from danbooru_post import DanbooruPost
 from scrape_config import (
     AVAIABLE_DOMAINS,
+    ScrapeConfig,
     ScrapeSubset,
     CaptionConfig,
     SearchResultFilterConfig,
+    AuthConfig,
 )
 
 from default_tags import EXCLUSION_TAGS_FILE, KAOMOJI_TAGS_FILE
@@ -37,17 +39,31 @@ def parse_other_tags(tag_text: str) -> list[str]:
 
 class DanbooruScraper:
     domain: AVAIABLE_DOMAINS
+    auth: Optional[AuthConfig]
 
-    def __init__(self, domain: AVAIABLE_DOMAINS = "danbooru.donmai.us") -> None:
+    def __init__(
+        self,
+        domain: AVAIABLE_DOMAINS = "danbooru.donmai.us",
+        auth: Optional[AuthConfig] = None,
+    ) -> None:
         self.domain = domain
+        self.auth = auth
+
+    def _get_headers(self) -> dict[str, str]:
+        headers = {"User-Agent": "Danbooru Scraper"}
+        if self.auth is not None:
+            headers["Authorization"] = f"Basic {self.auth.basic_auth()}"
+        return headers
 
     def get_posts(
         self, query: str, page: int = 1, limit_per_page: int = 20
     ) -> list[DanbooruPost]:
         url = f"https://{self.domain}/posts.json?tags={parse.quote(query)}&page={page}&limit={limit_per_page}"
-        response = requests.get(url)
+        headers = self._get_headers()
+
+        response = requests.get(url, headers=headers)
         if response.status_code != 200:
-            raise Exception("Error: " + str(response.status_code))
+            raise Exception("Error: " + str(response.status_code) + " " + response.text)
 
         posts = [DanbooruPost(**post) for post in json.loads(response.text)]
 
@@ -55,9 +71,11 @@ class DanbooruScraper:
 
     def get_post(self, post_id: int) -> DanbooruPost:
         url = f"https://{self.domain}/posts/{post_id}.json"
-        response = requests.get(url)
+        headers = self._get_headers()
+
+        response = requests.get(url, headers=headers)
         if response.status_code != 200:
-            raise Exception("Error: " + str(response.status_code))
+            raise Exception("Error: " + str(response.status_code) + " " + response.text)
 
         post = DanbooruPost(**json.loads(response.text))
 
@@ -200,14 +218,18 @@ def get_domain_and_post_id_from_url(url: str) -> tuple[AVAIABLE_DOMAINS, int]:
 
 
 def download_image(
-    url: str, output_dir: str | Path, filename: str, extension: str
+    url: str,
+    output_dir: str | Path,
+    filename: str,
+    extension: str,
+    headers: dict[str, str],
 ) -> None:
     output_path = Path(output_dir) / f"{filename}.{extension}"
 
     if output_path.exists():
         return
 
-    response = requests.get(url)
+    response = requests.get(url, headers=headers)
     if response.status_code != 200:
         raise Exception("Error: " + str(response.status_code))
 
@@ -218,6 +240,7 @@ def download_image(
 def download_post_images(
     items: list[DanbooruPostItem],
     caches: list[ScrapeResultCache],
+    auth: Optional[AuthConfig],
     pbar,
 ) -> None:
     for item, cache in zip(items, caches):
@@ -226,7 +249,16 @@ def download_post_images(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         download_image(
-            item.large_file_url, output_dir, item.post.id, item.post.file_ext
+            item.large_file_url,
+            output_dir,
+            item.post.id,
+            item.post.file_ext,
+            {
+                "User-Agent": "Danbooru Scraper",
+                "Authorization": f"Basic {auth.basic_auth()}"
+                if auth is not None
+                else "",
+            },
         )
         pbar.update(1)
 
@@ -273,9 +305,9 @@ def save_post_captions(
 def save_from_cache(
     chunk: list[DanbooruPostItem],
     caches: list[ScrapeResultCache],
-    fallback_caption_config: CaptionConfig,
+    config: ScrapeConfig,
     pbar,
 ) -> None:
-    save_post_captions(chunk, caches, fallback_caption_config)
+    save_post_captions(chunk, caches, config.caption)
 
-    download_post_images(chunk, caches, pbar)
+    download_post_images(chunk, caches, config.auth, pbar)

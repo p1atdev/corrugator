@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import yaml
 import json
 import toml
+from base64 import b64encode
 
 import utils
 from default_tags import (
@@ -174,11 +175,21 @@ class PostListSubset(ScrapeSubset):
     # FIXME: 実装する
 
 
+class AuthConfig(BaseModel):
+    username: str
+    api_key: str
+
+    def basic_auth(self) -> str:
+        return b64encode(f"{self.username}:{self.api_key}".encode("utf-8")).decode(
+            "utf-8"
+        )
+
+
 # 全体の設定
 class ScrapeConfig(BaseModel):
     domain: AVAIABLE_DOMAINS = "danbooru.donmai.us"
 
-    # TODO: 認証情報の対応
+    auth: Optional[AuthConfig] = None
 
     subsets: list[QuerySubset | QueryListSubset | PostListSubset]
 
