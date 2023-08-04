@@ -19,6 +19,12 @@ AVAIABLE_DOMAINS = Literal["danbooru.donmai.us", "safebooru.donmai.us"]
 INSERT_POSITION = Literal["start", "end"]
 RATING_TAG_ACTION = Literal["by_tag", "by_rating", "none"]
 
+# https://danbooru.donmai.us/wiki_pages/howto%3Arate
+SEARCH_RATING_TAG_SHORT = Literal["g", "s", "q", "e"]
+SEARCH_RATING_TAG_LONG = Literal["general", "sensitive", "questionable", "explicit"]
+SEARCH_RATING_ALIAS = Literal["sfw", "nsfw"]
+SEARCH_RATING_TAG = SEARCH_RATING_TAG_SHORT | SEARCH_RATING_TAG_LONG
+SEARCH_RATING_TAG_ALL = SEARCH_RATING_TAG | SEARCH_RATING_ALIAS
 
 # tags で str の場合は強制的にファイルパスとみなし、そのファイルを読みに行く
 
@@ -132,6 +138,17 @@ class TagCountFilterConfig(BaseModel):
     max: Optional[int] = None
 
 
+# ソート順
+class SortOrderConfig(BaseModel):
+    type: Optional[Literal["score", "rank", "upvotes", "downvotes"]] = None
+    direction: Optional[Literal["asc", "desc"]] = None
+
+
+class RatingFilterConfig(BaseModel):
+    include: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None
+    exclude: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None
+
+
 # 検索時のフィルター設定
 class SearchFilterConfig(BaseModel):
     score: Optional[ScoreFilterConfig] = None
@@ -139,8 +156,8 @@ class SearchFilterConfig(BaseModel):
     age: Optional[AgeFilterConfig] = None
     tag_count: Optional[TagCountFilterConfig] = None
     filetypes: Optional[list[str]] = None
-
-    # TODO: ソート順の対応
+    sort_order: Optional[SortOrderConfig] = None
+    rating: Optional[RatingFilterConfig] = None
 
 
 # 検索後のフィルター (検索結果数に影響する)

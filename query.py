@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 
-from typing import Optional, Literal
+from typing import Optional, Literal, get_args
 
-from scrape_config import SearchFilterConfig
+from scrape_config import SearchFilterConfig, SEARCH_RATING_TAG_ALL, SEARCH_RATING_ALIAS
 from tags import FILETYPE
 
 
@@ -67,10 +67,52 @@ def tag_count_query(min: Optional[int] = None, max: Optional[int] = None) -> str
 
 
 def filetype_query(filetypes: list[FILETYPE] = None) -> str:
+    if filetypes is None:
+        return ""
     if len(filetypes) == 0:
         return ""
     else:
         return f"filetype:{','.join(filetypes)}"
+
+
+def rating_query(
+    include: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None,
+    exclude: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None,
+) -> str:
+    if include is None and exclude is None:
+        return ""
+
+    include = [include] if isinstance(include, str) else include or []
+    exclude = [exclude] if isinstance(exclude, str) else exclude or []
+
+    def filter_tags(tags: list[SEARCH_RATING_TAG_ALL]) -> list[str]:
+        query = set()
+
+        for tag in tags or []:
+            if tag in get_args(SEARCH_RATING_ALIAS):
+                if tag == "sfw":
+                    query |= set(["g", "s"])
+                elif tag == "nsfw":
+                    query |= set(["q", "e"])
+                else:
+                    raise ValueError(f"Unknown rating alias: {tag}")
+            else:
+                # 頭文字をとって短い記法に統一する
+                query.add(tag[0])
+
+        return list(query)
+
+    include = f"rating:{','.join(filter_tags(include))}" if include else ""
+    exclude = f"-rating:{','.join(filter_tags(exclude))}" if exclude else ""
+
+    if include and exclude:
+        return f"{include} {exclude}"
+    elif include:
+        return include
+    elif exclude:
+        return exclude
+    else:
+        return ""
 
 
 def compose_query(
@@ -102,5 +144,8 @@ def compose_query(
 
     if filter.filetypes is not None:
         query.append(filetype_query(filter.filetypes))
+
+    if filter.rating is not None:
+        query.append(rating_query(filter.rating.include, filter.rating.exclude))
 
     return " ".join(query)
