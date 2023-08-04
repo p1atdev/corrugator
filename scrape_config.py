@@ -141,7 +141,7 @@ class TagCountFilterConfig(BaseModel):
 # ソート順
 class SortOrderConfig(BaseModel):
     type: Optional[Literal["score", "rank", "upvotes", "downvotes"]] = None
-    direction: Optional[Literal["asc", "desc"]] = None
+    direction: Optional[Literal["asc", "desc", "none"]] = None
 
 
 class RatingFilterConfig(BaseModel):
@@ -156,7 +156,7 @@ class SearchFilterConfig(BaseModel):
     age: Optional[AgeFilterConfig] = None
     tag_count: Optional[TagCountFilterConfig] = None
     filetypes: Optional[list[str]] = None
-    sort_order: Optional[SortOrderConfig] = None
+    order: Optional[SortOrderConfig] = None
     rating: Optional[RatingFilterConfig] = None
 
 

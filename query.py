@@ -75,6 +75,18 @@ def filetype_query(filetypes: list[FILETYPE] = None) -> str:
         return f"filetype:{','.join(filetypes)}"
 
 
+def search_order(type: Optional[str], direction: Optional[str]) -> str:
+    if type is None:
+        return ""
+
+    query = f"order:{type}"
+
+    if direction is not None and direction != "none":
+        query += f"_{direction}"
+
+    return query
+
+
 def rating_query(
     include: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None,
     exclude: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None,
@@ -144,6 +156,9 @@ def compose_query(
 
     if filter.filetypes is not None:
         query.append(filetype_query(filter.filetypes))
+
+    if filter.order is not None:
+        query.append(search_order(filter.order.type, filter.order.direction))
 
     if filter.rating is not None:
         query.append(rating_query(filter.rating.include, filter.rating.exclude))
