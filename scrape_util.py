@@ -18,14 +18,14 @@ from scrape_config import (
     AuthConfig,
 )
 
-from default_tags import EXCLUSION_TAGS_FILE, KAOMOJI_TAGS_FILE
+from default_tags import KAOMOJI_TAGS_FILE
 
 
 # _ ありの空白区切りから _ なしの配列にする
 def parse_general_tags(tag_text: str) -> list[str]:
     tags = tag_text.split(" ")
     for i, tag in enumerate(tags):
-        if not tag in utils.load_file_lines(EXCLUSION_TAGS_FILE):
+        if not tag in utils.load_file_lines(KAOMOJI_TAGS_FILE):
             tags[i] = tag.replace("_", " ")
     return tags
 
@@ -91,6 +91,8 @@ class DanbooruPostItem:
     general_tags: list[str]
     meta_tags: list[str]
 
+    quality_tags: list[str]
+
     rating_tags: list[str] = []
 
     large_file_url: str
@@ -111,6 +113,7 @@ class DanbooruPostItem:
             tag
             for tag in [
                 *self.rating_tags,
+                *self.quality_tags,
                 *self.artist_tags,
                 *self.character_tags,
                 *self.general_tags,

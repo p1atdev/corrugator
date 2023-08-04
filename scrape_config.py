@@ -1,6 +1,6 @@
 from typing import Optional, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import yaml
 import json
 import toml
@@ -73,6 +73,10 @@ class CaptionPostProcessConfig(BaseModel):
     inserts: list[InsertConfig] = []  # 指定されたものを追加 (前か後ろ)
 
 
+# masterpiece... などのタグを投稿の評価を基準に追加する
+QualityTagConfig = dict[str, int]
+
+
 # 使用するタグの設定
 class CaptionConfig(BaseModel):
     extension: str = "txt"
@@ -91,7 +95,17 @@ class CaptionConfig(BaseModel):
 
     rating: bool | RatingTagConfig = RatingTagConfig()
 
+    quality: Optional[QualityTagConfig] = None
+
     common: Optional[CaptionPostProcessConfig] = None
+
+    @validator("quality", pre=True)
+    def sort_array(cls, v, values):
+        if v is None:
+            return v
+        if isinstance(v, dict):
+            return dict(sorted(v.items(), key=lambda item: item[1], reverse=True))
+        return v
 
 
 # 検索時のフィルター (人的スコア)

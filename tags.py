@@ -1,11 +1,18 @@
 from typing import Literal, Optional
 
+import os
+
 import utils
 
 from danbooru_post import Rating
 from scrape_util import DanbooruPostItem
 
-from scrape_config import CaptionPostProcessConfig, RatingTagConfig, CaptionConfig
+from scrape_config import (
+    CaptionPostProcessConfig,
+    RatingTagConfig,
+    CaptionConfig,
+    QualityTagConfig,
+)
 
 INSERT_POSITION = Literal["start", "end"]
 
@@ -16,7 +23,10 @@ DEFAULT_FILETYPES: list[FILETYPE] = ["jpg", "png", "webp", "avif"]
 
 def normalize_tags(tags: str | list[str]) -> list[str]:
     if isinstance(tags, str):
-        return utils.load_file_lines(tags)
+        if os.path.isfile(tags):
+            return utils.load_file_lines(tags)
+        else:
+            return [tags]
     else:
         return tags
 
@@ -113,6 +123,7 @@ def do_caption_post_process(
     return tags
 
 
+## TODO: フォールバックするしくみをつける
 def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionConfig):
     if isinstance(config, bool):
         if not config:
@@ -121,6 +132,8 @@ def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionCo
             config = CaptionConfig()
 
     item.rating_tags = create_rating_tag(item.general_tags, item.post, config.rating)
+    item.quality_tags = create_quality_tag(item, config.quality)
+
     item.artist_tags = do_caption_post_process(item.artist_tags, config.artist)
     item.character_tags = do_caption_post_process(item.character_tags, config.character)
     item.copyright_tags = do_caption_post_process(item.copyright_tags, config.copyright)
@@ -159,3 +172,19 @@ def create_rating_tag(
             return config.general if config.general is not None else []
         else:
             raise Exception("Invalid rating: " + post_item.post.rating)
+
+
+def create_quality_tag(
+    post_item: DanbooruPostItem, config: Optional[QualityTagConfig]
+) -> list[str]:
+    if config is None:
+        return []
+
+    tags = []
+
+    for quality_tag, score in config.items():
+        if post_item.post.score >= score:
+            tags.append(quality_tag)
+            break
+
+    return tags
