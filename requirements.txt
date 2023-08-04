@@ -2,3 +2,5 @@ pydantic
 pyyaml
 toml
 numpy
+tqdm
+requests
