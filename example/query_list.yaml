@@ -1,5 +1,9 @@
 domain: "danbooru.donmai.us"
 
+# auth:
+#   username: ""
+#   api_key: ""
+
 subsets:
   - query_list_file: "./example/query_list.txt"
     output_path: "./output/query_list_example"

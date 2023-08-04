@@ -1,3 +1,7 @@
+# auth:
+#   username: ""
+#   api_key: ""
+
 subsets:
   - query: "cat_ears"
     output_path: "./output/post_processes"

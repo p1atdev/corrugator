@@ -1,3 +1,7 @@
+# auth:
+#   username: ""
+#   api_key: ""
+
 subsets:
   - query: "1girl, cat ears, score:>20"
     output_path: "./cat ears"
