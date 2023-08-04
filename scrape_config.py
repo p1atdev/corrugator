@@ -103,7 +103,7 @@ class CaptionConfig(BaseModel):
 
     quality: Optional[QualityTagConfig] = None
 
-    common: Optional[CaptionPostProcessConfig] = None
+    common: bool | Optional[CaptionPostProcessConfig] = None
 
     @validator("quality", pre=True)
     def sort_array(cls, v, values):

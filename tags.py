@@ -135,10 +135,24 @@ def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionCo
     item.quality_tags = create_quality_tag(item, config.quality)
 
     item.artist_tags = do_caption_post_process(item.artist_tags, config.artist)
-    item.character_tags = do_caption_post_process(item.character_tags, config.character)
     item.copyright_tags = do_caption_post_process(item.copyright_tags, config.copyright)
+    item.character_tags = do_caption_post_process(item.character_tags, config.character)
     item.general_tags = do_caption_post_process(item.general_tags, config.general)
     item.meta_tags = do_caption_post_process(item.meta_tags, config.meta)
+
+    # 共通の処理
+    if config.common is not None:
+        item.artist_tags = do_all_caption_post_process(item.artist_tags, config.common)
+        item.copyright_tags = do_all_caption_post_process(
+            item.copyright_tags, config.common
+        )
+        item.character_tags = do_all_caption_post_process(
+            item.character_tags, config.common
+        )
+        item.general_tags = do_all_caption_post_process(
+            item.general_tags, config.common
+        )
+        item.meta_tags = do_all_caption_post_process(item.meta_tags, config.common)
 
     return item
 
