@@ -171,13 +171,13 @@ def get_posts(
                 break
 
             for post in new_posts:
-                all_tags = (
-                    post.artist_tags
-                    + post.character_tags
-                    + post.copyright_tags
-                    + post.general_tags
-                    + post.meta_tags
-                )
+                all_tags = [
+                    *post.artist_tags,
+                    *post.copyright_tags,
+                    *post.character_tags,
+                    *post.general_tags,
+                    *post.meta_tags,
+                ]
 
                 if result_filter.include_any != [] and all(
                     tag not in result_filter.include_any for tag in all_tags
