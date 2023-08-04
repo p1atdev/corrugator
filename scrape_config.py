@@ -216,6 +216,10 @@ class AuthConfig(BaseModel):
         )
 
 
+class CacheConfig(BaseModel):
+    search_result: bool = True
+
+
 # 全体の設定
 class ScrapeConfig(BaseModel):
     domain: AVAIABLE_DOMAINS = "danbooru.donmai.us"
@@ -232,6 +236,8 @@ class ScrapeConfig(BaseModel):
     ] = SearchResultFilterConfig()
 
     max_workers: int = 10
+
+    cache: bool | CacheConfig = False
 
 
 def load_scrape_config_yaml(yaml_file: str) -> ScrapeConfig:

@@ -20,7 +20,9 @@ from scrape_config import (
     QueryListSubset,
     PostListSubset,
     CaptionConfig,
+    CacheConfig,
 )
+from cache_util import load_search_cache, save_search_cache
 
 
 def main(config: ScrapeConfig):
@@ -32,6 +34,15 @@ def main(config: ScrapeConfig):
             config.caption = CaptionConfig()
 
     print("Starting scrape...")
+
+    # このキャッシュは後ろのキャッシュとは別
+    cache_config = (
+        config.cache
+        if isinstance(config.cache, CacheConfig)
+        else CacheConfig()
+        if config.cache == True
+        else None
+    )
 
     caches: list[ScrapeResultCache] = []
 
@@ -45,16 +56,24 @@ def main(config: ScrapeConfig):
             )
             print("Query: " + query)
 
-            posts = scrape_util.get_posts(
-                scraper,
-                query,
-                subset.search_result_filter,
-                config.search_result_filter,
-                total_limit=subset.limit,
-                limit_per_page=200,
-            )
+            # キャッシュから
+            posts = load_search_cache(subset.output_path, query)
 
-            print(f"Found {len(posts)} posts")
+            if posts is not None:
+                print(f"Found {len(posts)} posts in cache")
+            else:
+                posts = scrape_util.get_posts(
+                    scraper,
+                    query,
+                    subset.search_result_filter,
+                    config.search_result_filter,
+                    total_limit=subset.limit,
+                    limit_per_page=200,
+                )
+                print(f"Found {len(posts)} posts")
+
+                if cache_config is not None and cache_config.search_result:
+                    save_search_cache(subset.output_path, query, posts)
 
             caches.append(ScrapeResultCache(posts, subset))
         elif isinstance(subset, QueryListSubset):
@@ -67,16 +86,25 @@ def main(config: ScrapeConfig):
 
                 print("Query: " + query)
 
-                posts = scrape_util.get_posts(
-                    scraper,
-                    query,
-                    subset.search_result_filter,
-                    config.search_result_filter,
-                    total_limit=subset.limit,
-                    limit_per_page=200,
-                )
+                # キャッシュから
+                posts = load_search_cache(subset.output_path, query)
 
-                print(f"Found {len(posts)} posts")
+                if posts is not None:
+                    print(f"Found {len(posts)} posts in cache")
+                else:
+                    posts = scrape_util.get_posts(
+                        scraper,
+                        query,
+                        subset.search_result_filter,
+                        config.search_result_filter,
+                        total_limit=subset.limit,
+                        limit_per_page=200,
+                    )
+
+                    print(f"Found {len(posts)} posts")
+
+                    if cache_config is not None and cache_config.search_result:
+                        save_search_cache(subset.output_path, query, posts)
 
                 caches.append(ScrapeResultCache(posts, subset))
         elif isinstance(subset, PostListSubset):

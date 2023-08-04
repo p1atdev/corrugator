@@ -6,6 +6,7 @@ from urllib import parse
 import json
 
 from tqdm import tqdm
+from pydantic import BaseModel
 
 import utils
 from danbooru_post import DanbooruPost
@@ -82,31 +83,31 @@ class DanbooruScraper:
         return post
 
 
-class DanbooruPostItem:
+class DanbooruPostItem(BaseModel):
     post: DanbooruPost
 
-    artist_tags: list[str]
-    character_tags: list[str]
-    copyright_tags: list[str]
-    general_tags: list[str]
-    meta_tags: list[str]
+    artist_tags: list[str] = []
+    character_tags: list[str] = []
+    copyright_tags: list[str] = []
+    general_tags: list[str] = []
+    meta_tags: list[str] = []
 
-    quality_tags: list[str]
+    quality_tags: list[str] = []
 
     rating_tags: list[str] = []
 
     large_file_url: str
 
-    def __init__(self, post: DanbooruPost):
-        self.post = post
-
-        self.artist_tags = parse_other_tags(post.tag_string_artist)
-        self.character_tags = parse_other_tags(post.tag_string_character)
-        self.copyright_tags = parse_other_tags(post.tag_string_copyright)
-        self.general_tags = parse_general_tags(post.tag_string_general)
-        self.meta_tags = parse_other_tags(post.tag_string_meta)
-
-        self.large_file_url = post.large_file_url
+    def new(post: DanbooruPost):
+        return DanbooruPostItem(
+            post=post,
+            artist_tags=parse_other_tags(post.tag_string_artist),
+            character_tags=parse_other_tags(post.tag_string_character),
+            copyright_tags=parse_other_tags(post.tag_string_copyright),
+            general_tags=parse_general_tags(post.tag_string_general),
+            meta_tags=parse_other_tags(post.tag_string_meta),
+            large_file_url=post.large_file_url,
+        )
 
     def compose_tags(self) -> str:
         return ", ".join(
@@ -162,7 +163,7 @@ def get_posts(
     with tqdm(total=total_limit) as pbar:
         while len(posts) < total_limit:
             new_posts = [
-                DanbooruPostItem(post)
+                DanbooruPostItem.new(post)
                 for post in scraper.get_posts(query, page, limit_per_page)
                 if post.md5 is not None
             ]

@@ -1,11 +1,11 @@
 from enum import Enum
-from dataclasses import dataclass
+from pydantic import BaseModel
 from datetime import datetime
 
 from typing import List, Optional
 
 
-class FileEXT(Enum):
+class FileEXT(str, Enum):
     JPG = "jpg"
     PNG = "png"
     GIF = "gif"
@@ -16,12 +16,12 @@ class FileEXT(Enum):
     AVIF = "avif"
 
 
-class Status(Enum):
+class Status(str, Enum):
     ACTIVE = "active"
     DELETED = "deleted"
 
 
-class VariantTypeEnum(Enum):
+class VariantTypeEnum(str, Enum):
     ORIGINAL = "original"
     SAMPLE = "sample"
     THE_180_X180 = "180x180"
@@ -29,8 +29,7 @@ class VariantTypeEnum(Enum):
     THE_720_X720 = "720x720"
 
 
-@dataclass
-class Variant:
+class Variant(BaseModel):
     type: VariantTypeEnum
     url: str
     width: int
@@ -38,35 +37,33 @@ class Variant:
     file_ext: FileEXT
 
 
-@dataclass
-class MediaAsset:
+class MediaAsset(BaseModel):
     id: int
-    created_at: datetime
-    updated_at: datetime
-    md5: str
+    created_at: str
+    updated_at: str
+    md5: Optional[str] = None
     file_ext: FileEXT
     file_size: int
     image_width: int
     image_height: int
-    duration: None
+    duration: Optional[float] = None
     status: Status
-    file_key: str
+    file_key: Optional[str] = None
     is_public: bool
     pixel_hash: str
-    variants: List[Variant]
+    variants: List[Variant] = []
 
 
-class Rating(Enum):
+class Rating(str, Enum):
     EXPLICIT = "e"
     GENERAL = "g"
     QUESTIONABLE = "q"
     SENSITIVE = "s"
 
 
-@dataclass
-class DanbooruPost:
+class DanbooruPost(BaseModel):
     id: int
-    created_at: datetime
+    created_at: str
     uploader_id: int
     score: int
     source: str
@@ -88,7 +85,7 @@ class DanbooruPost:
     is_flagged: bool
     is_deleted: bool
     tag_count: int
-    updated_at: datetime
+    updated_at: str
     is_banned: bool
     has_active_children: bool
     bit_flags: int
