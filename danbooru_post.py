@@ -22,6 +22,7 @@ class Status(str, Enum):
 
 
 class VariantTypeEnum(str, Enum):
+    FULL = "full"
     ORIGINAL = "original"
     SAMPLE = "sample"
     THE_180_X180 = "180x180"
