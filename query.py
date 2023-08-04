@@ -183,9 +183,7 @@ def compose_query(
     if filter is not None and filter.order is not None:
         query.append(search_order(filter.order))
     elif fallback_filter.order is not None:
-        query.append(
-            search_order(fallback_filter.order.type, fallback_filter.order.direction)
-        )
+        query.append(search_order(fallback_filter.order))
 
     if filter is not None and filter.rating is not None:
         query.append(rating_query(filter.rating.include, filter.rating.exclude))
