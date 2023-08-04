@@ -156,7 +156,7 @@ class SearchFilterConfig(BaseModel):
     age: Optional[AgeFilterConfig] = None
     tag_count: Optional[TagCountFilterConfig] = None
     filetypes: Optional[list[str]] = None
-    order: Optional[SortOrderConfig] = None
+    order: Optional[SortOrderConfig | str] = None
     rating: Optional[RatingFilterConfig] = None
 
 

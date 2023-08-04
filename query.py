@@ -3,7 +3,12 @@ from __future__ import annotations
 
 from typing import Optional, Literal, get_args
 
-from scrape_config import SearchFilterConfig, SEARCH_RATING_TAG_ALL, SEARCH_RATING_ALIAS
+from scrape_config import (
+    SearchFilterConfig,
+    SortOrderConfig,
+    SEARCH_RATING_TAG_ALL,
+    SEARCH_RATING_ALIAS,
+)
 from tags import FILETYPE
 
 
@@ -75,7 +80,13 @@ def filetype_query(filetypes: list[FILETYPE] = None) -> str:
         return f"filetype:{','.join(filetypes)}"
 
 
-def search_order(type: Optional[str], direction: Optional[str]) -> str:
+def search_order(order: Optional[SortOrderConfig | str]) -> str:
+    if isinstance(order, str):
+        type = order
+        direction = None
+    else:
+        type, direction = order.type, order.direction
+
     if type is None:
         return ""
 
@@ -170,7 +181,7 @@ def compose_query(
         query.append(filetype_query(fallback_filter.filetypes))
 
     if filter is not None and filter.order is not None:
-        query.append(search_order(filter.order.type, filter.order.direction))
+        query.append(search_order(filter.order))
     elif fallback_filter.order is not None:
         query.append(
             search_order(fallback_filter.order.type, fallback_filter.order.direction)
