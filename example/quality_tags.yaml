@@ -1,0 +1,23 @@
+domain: "danbooru.donmai.us"
+
+# auth:
+#   username: ""
+#   api_key: ""
+
+subsets:
+  - query: "^_^"
+    output_path: "./output/emoji"
+    limit: 10
+
+    search_filter:
+      score:
+        min: 50
+
+    caption:
+      quality:
+        "masterpiece": 150
+        "high quality": 50
+        "best quality": 100
+        "worst quality": -9999
+
+      overwrite: true
