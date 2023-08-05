@@ -57,7 +57,7 @@ def main(config: ScrapeConfig):
             print("Query: " + query)
 
             # キャッシュから
-            posts = load_search_cache(subset.output_path, query)
+            posts = load_search_cache(subset.output_path, query)[: subset.limit]
 
             if posts is not None:
                 print(f"Found {len(posts)} posts in cache")
@@ -87,7 +87,7 @@ def main(config: ScrapeConfig):
                 print("Query: " + query)
 
                 # キャッシュから
-                posts = load_search_cache(subset.output_path, query)
+                posts = load_search_cache(subset.output_path, query)[: subset.limit]
 
                 if posts is not None:
                     print(f"Found {len(posts)} posts in cache")
