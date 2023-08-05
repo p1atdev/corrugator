@@ -37,7 +37,7 @@ def is_nsfw(
 ) -> bool:
     if nsfw_tags is None:
         return False
-    return any(tag in nsfw_tags for tag in tags)
+    return any(tag in normalize_tags(nsfw_tags) for tag in tags)
 
 
 def process_replace(
@@ -142,17 +142,15 @@ def do_all_caption_post_process(item: DanbooruPostItem, config: bool | CaptionCo
 
     # 共通の処理
     if config.common is not None:
-        item.artist_tags = do_all_caption_post_process(item.artist_tags, config.common)
-        item.copyright_tags = do_all_caption_post_process(
+        item.artist_tags = do_caption_post_process(item.artist_tags, config.common)
+        item.copyright_tags = do_caption_post_process(
             item.copyright_tags, config.common
         )
-        item.character_tags = do_all_caption_post_process(
+        item.character_tags = do_caption_post_process(
             item.character_tags, config.common
         )
-        item.general_tags = do_all_caption_post_process(
-            item.general_tags, config.common
-        )
-        item.meta_tags = do_all_caption_post_process(item.meta_tags, config.common)
+        item.general_tags = do_caption_post_process(item.general_tags, config.common)
+        item.meta_tags = do_caption_post_process(item.meta_tags, config.common)
 
     return item
 
