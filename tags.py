@@ -169,7 +169,11 @@ def create_rating_tag(
 
     elif config.type == "by_tag":
         if is_nsfw(original, config.nsfw_tags):
-            return config.insert_tags if config.insert_tags is not None else []
+            return (
+                normalize_tags(config.insert_tags)
+                if config.insert_tags is not None
+                else []
+            )
         else:
             return []
 
