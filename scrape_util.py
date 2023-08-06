@@ -96,8 +96,6 @@ class DanbooruPostItem(BaseModel):
 
     rating_tags: list[str] = []
 
-    large_file_url: str
-
     def new(post: DanbooruPost):
         return DanbooruPostItem(
             post=post,
@@ -106,7 +104,6 @@ class DanbooruPostItem(BaseModel):
             copyright_tags=parse_other_tags(post.tag_string_copyright),
             general_tags=parse_general_tags(post.tag_string_general),
             meta_tags=parse_other_tags(post.tag_string_meta),
-            large_file_url=post.large_file_url,
         )
 
     def compose_tags(self) -> str:
@@ -253,7 +250,7 @@ def download_post_images(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         download_image(
-            item.large_file_url,
+            item.post.file_url,
             output_dir,
             item.post.id,
             item.post.file_ext,
