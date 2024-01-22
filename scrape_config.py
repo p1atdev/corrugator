@@ -44,10 +44,10 @@ class RatingTagConfig(BaseModel):
     insert_tag_file_path: Optional[str] = None
 
     # by_rating (非推奨)
-    explicit: Optional[str] = "explicit"
-    sensitive: Optional[str] = "sensitive"
-    questionable: Optional[str] = "questionable"
-    general: Optional[str] = None
+    explicit: str | list[str] | None = "explicit"
+    sensitive: str | list[str] | None = "sensitive"
+    questionable: str | list[str] | None = "questionable"
+    general: str | list[str] | None = None
 
 
 # 置換

@@ -179,13 +179,21 @@ def create_rating_tag(
 
     elif config.type == "by_rating":
         if post_item.post.rating == Rating.EXPLICIT:
-            return config.explicit if config.explicit is not None else []
+            return (
+                normalize_tags(config.explicit) if config.explicit is not None else []
+            )
         elif post_item.post.rating == Rating.SENSITIVE:
-            return config.sensitive if config.sensitive is not None else []
+            return (
+                normalize_tags(config.sensitive) if config.sensitive is not None else []
+            )
         elif post_item.post.rating == Rating.QUESTIONABLE:
-            return config.questionable if config.questionable is not None else []
+            return (
+                normalize_tags(config.questionable)
+                if config.questionable is not None
+                else []
+            )
         elif post_item.post.rating == Rating.GENERAL:
-            return config.general if config.general is not None else []
+            return normalize_tags(config.general) if config.general is not None else []
         else:
             raise Exception("Invalid rating: " + post_item.post.rating)
 
