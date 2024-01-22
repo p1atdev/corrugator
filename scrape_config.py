@@ -28,6 +28,8 @@ SEARCH_RATING_TAG_ALL = SEARCH_RATING_TAG | SEARCH_RATING_ALIAS
 
 # tags で str の場合は強制的にファイルパスとみなし、そのファイルを読みに行く
 
+CATEGORY_ORDER_STYLE = Literal["wd", "naidv3", "animaginexlv3"]
+
 
 # レーティング (nsfwなど) タグ設定
 class RatingTagConfig(BaseModel):
@@ -99,6 +101,9 @@ class CaptionConfig(BaseModel):
         ]
     )
 
+    category_separator: str = ", "
+    category_order: CATEGORY_ORDER_STYLE | None = None
+
     rating: bool | RatingTagConfig = RatingTagConfig()
 
     quality: Optional[QualityTagConfig] = None
@@ -112,6 +117,13 @@ class CaptionConfig(BaseModel):
         if isinstance(v, dict):
             return dict(sorted(v.items(), key=lambda item: item[1], reverse=True))
         return v
+
+    @validator("category_order", pre=True)
+    def lower_category_order(cls, v, values):
+        if v is None:
+            return v
+
+        return v.lower()
 
 
 # 検索時のフィルター (人的スコア)

@@ -17,16 +17,20 @@ from scrape_config import (
     CaptionConfig,
     SearchResultFilterConfig,
     AuthConfig,
+    CATEGORY_ORDER_STYLE,
 )
 
-from default_tags import KAOMOJI_TAGS_FILE
+from default_tags import KAOMOJI_TAGS_FILE, PERSON_TAGS_FILE
+
+KAOMOJI_TAGS = utils.load_file_lines(KAOMOJI_TAGS_FILE)
+PERSON_TAGS = utils.load_file_lines(PERSON_TAGS_FILE)
 
 
 # _ ありの空白区切りから _ なしの配列にする
 def parse_general_tags(tag_text: str) -> list[str]:
     tags = tag_text.split(" ")
     for i, tag in enumerate(tags):
-        if not tag in utils.load_file_lines(KAOMOJI_TAGS_FILE):
+        if not tag in KAOMOJI_TAGS:
             tags[i] = tag.replace("_", " ")
     return tags
 
@@ -36,6 +40,18 @@ def parse_other_tags(tag_text: str) -> list[str]:
     for i, tag in enumerate(tags):
         tags[i] = tag.replace("_", " ")
     return tags
+
+
+# 人物タグとそうじゃないタグに分離する
+def separate_person_tags(tags: list[str]):
+    person_tags = []
+    not_person_tags = []
+    for tag in tags:
+        if tag in PERSON_TAGS:
+            person_tags.append(tag)
+        else:
+            not_person_tags.append(tag)
+    return person_tags, not_person_tags
 
 
 class DanbooruScraper:
@@ -106,19 +122,88 @@ class DanbooruPostItem(BaseModel):
             meta_tags=parse_other_tags(post.tag_string_meta),
         )
 
-    def compose_tags(self) -> str:
-        return ", ".join(
-            tag
-            for tag in [
-                *self.rating_tags,
-                *self.quality_tags,
-                *self.artist_tags,
-                *self.character_tags,
-                *self.general_tags,
-                *self.meta_tags,
+    def _compose_tags_wd_style(
+        self,
+        category_separator: str = ", ",
+    ):
+        return category_separator.join(
+            [
+                category
+                for category in (
+                    ", ".join([tag for tag in tags if tag.strip() != ""])
+                    for tags in [
+                        self.rating_tags,
+                        self.quality_tags,
+                        self.artist_tags,
+                        self.character_tags,
+                        self.general_tags,
+                        self.meta_tags,
+                    ]
+                )
+                if category.strip() != ""
             ]
-            if tag.strip() != ""
         )
+
+    def _compose_tags_nai_style(
+        self,
+        category_separator: str = ", ",
+    ):
+        person_tags, other_tags = separate_person_tags(self.general_tags)
+        return category_separator.join(
+            [
+                category
+                for category in (
+                    ", ".join([tag for tag in tags if tag.strip() != ""])
+                    for tags in [
+                        person_tags,
+                        self.artist_tags,
+                        self.character_tags,
+                        self.copyright_tags,
+                        other_tags,
+                        self.meta_tags,
+                        self.quality_tags,
+                        self.rating_tags,
+                    ]
+                )
+                if category.strip() != ""
+            ]
+        )
+
+    def _compose_tags_animaginexl_style(
+        self,
+        category_separator: str = ", ",
+    ):
+        person_tags, other_tags = separate_person_tags(self.general_tags)
+        return category_separator.join(
+            [
+                category
+                for category in (
+                    ", ".join([tag for tag in tags if tag.strip() != ""])
+                    for tags in [
+                        person_tags,
+                        self.character_tags,
+                        self.copyright_tags,
+                        other_tags,
+                        self.meta_tags,
+                        self.quality_tags,
+                        self.rating_tags,
+                    ]
+                )
+                if category.strip() != ""
+            ]
+        )
+
+    def compose_tags(
+        self,
+        category_separator: str = ", ",
+        category_order: CATEGORY_ORDER_STYLE | None = None,
+    ) -> str:
+        if category_order is None or category_order == "wd":
+            return self._compose_tags_wd_style(category_separator)
+        elif category_order == "naidv3":
+            return self._compose_tags_nai_style(category_separator)
+        elif category_order == "animaginexlv3":
+            return self._compose_tags_animaginexl_style(category_separator)
 
 
 class ScrapeResultCache:
@@ -295,7 +380,7 @@ def save_post_captions(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         save_caption(
-            item.compose_tags(),
+            item.compose_tags(config.category_separator, config.category_order),
             output_dir,
             item.post.id,
             config.extension,
