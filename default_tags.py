@@ -1,6 +1,7 @@
 ALLOWED_META_TAGS_FILE = "./config/allowed_meta_tags.txt"
 EXCLUSION_TAGS_FILE = "./config/exclusion_tags.txt"
 KAOMOJI_TAGS_FILE = "./config/kaomoji_tags.txt"
+PERSON_TAGS_FILE = "./config/person_tags.txt"
 NSFW_PREFIX_FILE = "./config/nsfw_prefix.txt"
 SENSITIVE_TAGS_FILE = "./config/sensitive_tags.txt"
 VIOLENCE_TAGS_FILE = "./config/violence_tags.txt"
