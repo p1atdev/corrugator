@@ -24,3 +24,4 @@ scan
 scan dust
 binding discoloration
 avatar generator
+reference photo
