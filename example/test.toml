@@ -1,7 +1,7 @@
 [[subsets]]
 limit = 100
 output_path = "./high quality"
-tag_list_file = "./tags.txt"
+query = "1girl, cat ears, score:>20"
 
 [subsets.filter]
 
@@ -11,9 +11,9 @@ filetypes = ["png"]
 max = 100
 min = 10
 
-# [subsets.filter.date]
-# end = "2021-12-23"
-# start = "2019-01-23"
+[subsets.filter.date]
+end = "2021-12-23"
+start = "2019-01-23"
 
 [subsets.filter.age]
 max = "30days"

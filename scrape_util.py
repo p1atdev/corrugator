@@ -112,6 +112,7 @@ class DanbooruPostItem(BaseModel):
 
     rating_tags: list[str] = []
 
+    @staticmethod
     def new(post: DanbooruPost):
         return DanbooruPostItem(
             post=post,
@@ -209,7 +210,7 @@ class DanbooruPostItem(BaseModel):
 class ScrapeResultCache:
     output_path: str
     save_state_path: Optional[str] = None
-    caption: Optional[bool | CaptionConfig] = False
+    caption: CaptionConfig | None = None
 
     items: list[DanbooruPostItem]
 
@@ -223,7 +224,7 @@ class ScrapeResultCache:
 def get_posts(
     scraper: DanbooruScraper,
     query: str,
-    search_result_filter: Optional[bool | SearchResultFilterConfig],
+    search_result_filter: SearchResultFilterConfig | None,
     fallback_search_result_filter: SearchResultFilterConfig,
     total_limit: int = 100,
     limit_per_page: int = 200,
@@ -232,15 +233,11 @@ def get_posts(
     page = 1
     limit_per_page = 200
 
-    result_filter = fallback_search_result_filter
-    if search_result_filter is not None:
-        if isinstance(search_result_filter, bool):
-            if search_result_filter:
-                pass  # デフォルト値
-            else:
-                result_filter = None
-        else:
-            result_filter = search_result_filter
+    result_filter = (
+        search_result_filter
+        if search_result_filter is not None
+        else fallback_search_result_filter
+    )
 
     with tqdm(total=total_limit) as pbar:
         while len(posts) < total_limit:
@@ -334,10 +331,15 @@ def download_post_images(
 
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
+        if item.post.file_url is None:
+            print(f"file_url is None! (skipped: ID {item.post.id})")
+            pbar.update(1)
+            return
+
         download_image(
             item.post.file_url,
             output_dir,
-            item.post.id,
+            str(item.post.id),
             item.post.file_ext,
             {
                 "User-Agent": "Danbooru Scraper",
@@ -367,24 +369,22 @@ def save_post_captions(
     fallback_caption_config: CaptionConfig,
 ) -> None:
     for item, cache in zip(items, caches):
-        if isinstance(cache.caption, bool):
-            if not cache.caption:
-                continue  # キャプションを保存しない
-            else:
-                cache.caption = CaptionConfig()  # デフォルト値
-
-        config = fallback_caption_config if cache.caption is None else cache.caption
+        caption_config = (
+            cache.caption if cache.caption is not None else fallback_caption_config
+        )
 
         output_dir = cache.output_path
 
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         save_caption(
-            item.compose_tags(config.category_separator, config.category_order),
+            item.compose_tags(
+                caption_config.category_separator, caption_config.category_order
+            ),
             output_dir,
-            item.post.id,
-            config.extension,
-            config.overwrite,
+            str(item.post.id),
+            caption_config.extension,
+            caption_config.overwrite,
         )
 
 

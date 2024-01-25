@@ -27,7 +27,7 @@ class Day:
         return f"{self.num}{self.unit[0]}"
 
 
-def score_query(min: Optional[int] = None, max: Optional[int] = None) -> str:
+def score_query(min: int | None = None, max: int | None = None) -> str:
     if min is None and max is None:
         return ""
     elif min is None:
@@ -38,7 +38,7 @@ def score_query(min: Optional[int] = None, max: Optional[int] = None) -> str:
         return f"score:{min}..{max}"
 
 
-def date_query(start: Optional[str] = None, end: Optional[str] = None) -> str:
+def date_query(start: str | None = None, end: str | None = None) -> str:
     if start is None and end is None:
         return ""
     elif start is None:
@@ -49,7 +49,7 @@ def date_query(start: Optional[str] = None, end: Optional[str] = None) -> str:
         return f"date:{start}..{end}"
 
 
-def age_query(min: Optional[Day] = None, max: Optional[Day] = None) -> str:
+def age_query(min: Day | str | None = None, max: Day | str | None = None) -> str:
     if min is None and max is None:
         return ""
     elif min is None:
@@ -60,7 +60,7 @@ def age_query(min: Optional[Day] = None, max: Optional[Day] = None) -> str:
         return f"age:{min}..{max}"
 
 
-def tag_count_query(min: Optional[int] = None, max: Optional[int] = None) -> str:
+def tag_count_query(min: int | None = None, max: int | None = None) -> str:
     if min is None and max is None:
         return ""
     elif min is None:
@@ -71,7 +71,7 @@ def tag_count_query(min: Optional[int] = None, max: Optional[int] = None) -> str
         return f"tagcount:{min}..{max}"
 
 
-def filetype_query(filetypes: list[FILETYPE] = None) -> str:
+def filetype_query(filetypes: list[FILETYPE] | None = None) -> str:
     if filetypes is None:
         return ""
     if len(filetypes) == 0:
@@ -80,12 +80,14 @@ def filetype_query(filetypes: list[FILETYPE] = None) -> str:
         return f"filetype:{','.join(filetypes)}"
 
 
-def search_order(order: Optional[SortOrderConfig | str]) -> str:
+def search_order(order: SortOrderConfig | str | None) -> str:
     if isinstance(order, str):
         type = order
         direction = None
-    else:
+    elif isinstance(order, SortOrderConfig):
         type, direction = order.type, order.direction
+    else:
+        return ""
 
     if type is None:
         return ""
@@ -99,8 +101,8 @@ def search_order(order: Optional[SortOrderConfig | str]) -> str:
 
 
 def rating_query(
-    include: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None,
-    exclude: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None,
+    include: list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL | None = None,
+    exclude: list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL | None = None,
 ) -> str:
     if include is None and exclude is None:
         return ""
@@ -125,22 +127,22 @@ def rating_query(
 
         return list(query)
 
-    include = f"rating:{','.join(filter_tags(include))}" if include else ""
-    exclude = f"-rating:{','.join(filter_tags(exclude))}" if exclude else ""
+    include_query = f"rating:{','.join(filter_tags(include))}" if include else ""
+    exclude_query = f"-rating:{','.join(filter_tags(exclude))}" if exclude else ""
 
-    if include and exclude:
-        return f"{include} {exclude}"
-    elif include:
-        return include
-    elif exclude:
-        return exclude
+    if include_query and exclude_query:
+        return f"{include_query} {exclude_query}"
+    elif include_query:
+        return include_query
+    elif exclude_query:
+        return exclude_query
     else:
         return ""
 
 
 def compose_query(
     base_query: str,
-    filter: Optional[bool | SearchFilterConfig],
+    filter: bool | SearchFilterConfig | None,
     fallback_filter: SearchFilterConfig,
 ) -> str:
     if isinstance(filter, bool):

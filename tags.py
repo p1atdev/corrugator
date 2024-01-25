@@ -12,11 +12,10 @@ from scrape_config import (
     RatingTagConfig,
     CaptionConfig,
     QualityTagConfig,
+    FILETYPE,
 )
 
 INSERT_POSITION = Literal["start", "end"]
-
-FILETYPE = Literal["jpg", "png", "gif", "webm", "mp4", "swf", "zip", "webp", "avif"]
 
 DEFAULT_FILETYPES: list[FILETYPE] = ["jpg", "png", "webp", "avif"]
 

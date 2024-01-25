@@ -1,6 +1,6 @@
-from typing import Optional, Literal
+from typing import Literal
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, root_validator
 import yaml
 import json
 import toml
@@ -30,6 +30,8 @@ SEARCH_RATING_TAG_ALL = SEARCH_RATING_TAG | SEARCH_RATING_ALIAS
 
 CATEGORY_ORDER_STYLE = Literal["wd", "naidv3", "animaginexlv3"]
 
+FILETYPE = Literal["jpg", "png", "gif", "webm", "mp4", "swf", "zip", "webp", "avif"]
+
 
 # レーティング (nsfwなど) タグ設定
 class RatingTagConfig(BaseModel):
@@ -40,8 +42,8 @@ class RatingTagConfig(BaseModel):
     insert_tags: str | list[str] = utils.load_file_lines(NSFW_PREFIX_FILE)
 
     # こちらが指定されたらこっちを優先
-    nsfw_tag_file_path: Optional[str] = None
-    insert_tag_file_path: Optional[str] = None
+    nsfw_tag_file_path: str | None = None
+    insert_tag_file_path: str | None = None
 
     # by_rating (非推奨)
     explicit: str | list[str] | None = "explicit"
@@ -106,9 +108,9 @@ class CaptionConfig(BaseModel):
 
     rating: bool | RatingTagConfig = RatingTagConfig()
 
-    quality: Optional[QualityTagConfig] = None
+    quality: QualityTagConfig | None = None
 
-    common: bool | Optional[CaptionPostProcessConfig] = None
+    common: bool | CaptionPostProcessConfig | None = None
 
     @validator("quality", pre=True)
     def sort_array(cls, v, values):
@@ -128,48 +130,48 @@ class CaptionConfig(BaseModel):
 
 # 検索時のフィルター (人的スコア)
 class ScoreFilterConfig(BaseModel):
-    min: Optional[int] = None
-    max: Optional[int] = None
+    min: int | None = None
+    max: int | None = None
 
 
 # 検索時のフィルター (投稿日)
 class DateFilterConfig(BaseModel):
-    start: Optional[str] = None
-    end: Optional[str] = None
+    start: str | None = None
+    end: str | None = None
 
 
 # 検索時のフィルター (投稿日からの経過日数)
 class AgeFilterConfig(BaseModel):
-    min: Optional[str] = None
-    max: Optional[str] = None
+    min: str | None = None
+    max: str | None = None
 
 
 # 検索時のフィルター (画像についてるタグ数)
 class TagCountFilterConfig(BaseModel):
-    min: Optional[int] = None
-    max: Optional[int] = None
+    min: int | None = None
+    max: int | None = None
 
 
 # ソート順
 class SortOrderConfig(BaseModel):
-    type: Optional[Literal["score", "rank", "upvotes", "downvotes"]] = None
-    direction: Optional[Literal["asc", "desc", "none"]] = None
+    type: Literal["score", "rank", "upvotes", "downvotes"] | None = None
+    direction: Literal["asc", "desc", "none"] | None = None
 
 
 class RatingFilterConfig(BaseModel):
-    include: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None
-    exclude: Optional[list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL] = None
+    include: list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL | None = None
+    exclude: list[SEARCH_RATING_TAG_ALL] | SEARCH_RATING_TAG_ALL | None = None
 
 
 # 検索時のフィルター設定
 class SearchFilterConfig(BaseModel):
-    score: Optional[ScoreFilterConfig] = None
-    date: Optional[DateFilterConfig] = None
-    age: Optional[AgeFilterConfig] = None
-    tag_count: Optional[TagCountFilterConfig] = None
-    filetypes: Optional[list[str]] = None
-    order: Optional[SortOrderConfig | str] = None
-    rating: Optional[RatingFilterConfig] = None
+    score: ScoreFilterConfig | None = None
+    date: DateFilterConfig | None = None
+    age: AgeFilterConfig | None = None
+    tag_count: TagCountFilterConfig | None = None
+    filetypes: list[FILETYPE] | None = None
+    order: SortOrderConfig | str | None = None
+    rating: RatingFilterConfig | None = None
 
 
 # 検索後のフィルター (検索結果数に影響する)
@@ -187,29 +189,75 @@ class SearchResultFilterConfig(BaseModel):
 
 class ScrapeSubset(BaseModel):
     # サブセットごとにドメインを指定可能
-    domain: Optional[AVAIABLE_DOMAINS] = None
+    domain: AVAIABLE_DOMAINS | None = None
 
     output_path: str
-    save_state_path: Optional[str] = None
+    save_state_path: str | None = None
 
     limit: int = 100
-    caption: Optional[bool | CaptionConfig] = None
+    caption: CaptionConfig | None = None
+
+    @root_validator(pre=True)
+    def set_default_values(cls, values):
+        if "caption" in values and isinstance(values["caption"], bool):
+            if values["caption"]:
+                values["caption"] = CacheConfig()
+            else:
+                values["caption"] = None
+
+        return values
 
 
 # シンプルに検索ワードで検索
 class QuerySubset(ScrapeSubset):
     query: str
 
-    search_filter: Optional[SearchFilterConfig] = None
-    search_result_filter: Optional[SearchResultFilterConfig] = None
+    search_filter: SearchFilterConfig | None = None
+    search_result_filter: SearchResultFilterConfig | None = None
+
+    @root_validator(pre=True)
+    def set_default_values(cls, values):
+        if "search_filter" in values and isinstance(values["search_filter"], bool):
+            if values["search_filter"]:
+                values["search_filter"] = SearchFilterConfig()
+            else:
+                values["search_filter"] = None
+
+        if "search_result_filter" in values and isinstance(
+            values["search_result_filter"], bool
+        ):
+            if values["search_result_filter"]:
+                values["search_result_filter"] = SearchResultFilterConfig()
+            else:
+                values["search_result_filter"] = None
+
+        return values
 
 
 # 事前に用意した検索ワードのリストファイルを使って検索
 class QueryListSubset(ScrapeSubset):
     query_list_file: str
 
-    search_filter: Optional[SearchFilterConfig] = None
-    search_result_filter: Optional[SearchResultFilterConfig] = None
+    search_filter: SearchFilterConfig | None = None
+    search_result_filter: SearchResultFilterConfig | None = None
+
+    @root_validator(pre=True)
+    def set_default_values(cls, values):
+        if "search_filter" in values and isinstance(values["search_filter"], bool):
+            if values["search_filter"]:
+                values["search_filter"] = SearchFilterConfig()
+            else:
+                values["search_filter"] = None
+
+        if "search_result_filter" in values and isinstance(
+            values["search_result_filter"], bool
+        ):
+            if values["search_result_filter"]:
+                values["search_result_filter"] = SearchResultFilterConfig()
+            else:
+                values["search_result_filter"] = None
+
+        return values
 
 
 # danbooru の post の url リストから取得する
@@ -236,20 +284,34 @@ class CacheConfig(BaseModel):
 class ScrapeConfig(BaseModel):
     domain: AVAIABLE_DOMAINS = "danbooru.donmai.us"
 
-    auth: Optional[AuthConfig] = None
+    auth: AuthConfig | None = None
 
     subsets: list[QuerySubset | QueryListSubset | PostListSubset]
 
     # サブセットで指定されなかったらこっちにフォールバックされる
-    caption: bool | CaptionConfig = False
-    search_filter: Optional[SearchFilterConfig] = SearchFilterConfig()
-    search_result_filter: Optional[
-        SearchResultFilterConfig
-    ] = SearchResultFilterConfig()
+    caption: CaptionConfig = CaptionConfig()
+    search_filter: SearchFilterConfig = SearchFilterConfig()
+    search_result_filter: SearchResultFilterConfig = SearchResultFilterConfig()
 
     max_workers: int = 10
 
     cache: bool | CacheConfig = False
+
+    @root_validator(pre=True)
+    def set_default_values(cls, values):
+        if "caption" not in values or values["caption"] is None:
+            values["caption"] = CacheConfig()
+
+        if "search_filter" not in values or values["search_filter"] is None:
+            values["search_filter"] = SearchFilterConfig()
+
+        if (
+            "search_result_filter" not in values
+            or values["search_result_filter"] is None
+        ):
+            values["search_result_filter"] = SearchResultFilterConfig()
+
+        return values
 
 
 def load_scrape_config_yaml(yaml_file: str) -> ScrapeConfig:

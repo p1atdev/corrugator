@@ -6,6 +6,7 @@ sys.path.append("..")
 
 import utils
 from scrape_util import DanbooruScraper, get_posts
+from scrape_config import SearchResultFilterConfig
 from default_tags import EXCLUSION_TAGS_FILE, SENSITIVE_TAGS_FILE, VIOLENCE_TAGS_FILE
 
 
@@ -20,11 +21,19 @@ class TestScrapeUtil(unittest.TestCase):
     def test_get_posts(self):
         scraper = DanbooruScraper()
 
+        exclude_tags = (
+            utils.load_file_lines(SENSITIVE_TAGS_FILE)
+            + utils.load_file_lines(VIOLENCE_TAGS_FILE)
+            + utils.load_file_lines(EXCLUSION_TAGS_FILE)
+        )
+
         posts = get_posts(
             scraper,
             "2girls",
-            exclusion_general_tags=utils.load_file_lines(SENSITIVE_TAGS_FILE)
-            + utils.load_file_lines(VIOLENCE_TAGS_FILE),
+            search_result_filter=None,
+            fallback_search_result_filter=SearchResultFilterConfig(
+                exclude_any=exclude_tags
+            ),
             total_limit=1000,
         )
 
