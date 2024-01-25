@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pathlib import Path
 from hashlib import sha256
 import json
@@ -46,7 +44,7 @@ def save_cache(directory: str | Path, hash: str, data, tmp_dirname: str = "cache
 
 def load_search_cache(
     directory: str | Path, search_query: str, tmp_dirname: str = "cache"
-) -> Optional[list[DanbooruPostItem]]:
+) -> list[DanbooruPostItem] | None:
     if isinstance(directory, str):
         directory = Path(directory)
 

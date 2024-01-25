@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import os
 
@@ -32,7 +32,7 @@ def normalize_tags(tags: str | list[str]) -> list[str]:
 
 def is_nsfw(
     tags: list[str],
-    nsfw_tags: Optional[str | list[str]],
+    nsfw_tags: str | list[str] | None,
 ) -> bool:
     if nsfw_tags is None:
         return False
@@ -40,7 +40,7 @@ def is_nsfw(
 
 
 def process_replace(
-    original: list[str], _from: Optional[str | list[str]], to: str
+    original: list[str], _from: str | list[str] | None, to: str
 ) -> list[str]:
     if _from is None:
         return original
@@ -54,7 +54,7 @@ def process_replace(
     return original
 
 
-def process_keep(original: list[str], keep: Optional[str | list[str]]) -> list[str]:
+def process_keep(original: list[str], keep: str | list[str] | None) -> list[str]:
     if keep is None:
         return original
 
@@ -67,7 +67,7 @@ def process_keep(original: list[str], keep: Optional[str | list[str]]) -> list[s
     return new_tags
 
 
-def process_delete(original: list[str], delete: Optional[str | list[str]]) -> list[str]:
+def process_delete(original: list[str], delete: str | list[str] | None) -> list[str]:
     if delete is None:
         return original
 
@@ -81,7 +81,7 @@ def process_delete(original: list[str], delete: Optional[str | list[str]]) -> li
 
 
 def process_insert(
-    original: list[str], insert: Optional[str | list[str]], position: INSERT_POSITION
+    original: list[str], insert: str | list[str] | None, position: INSERT_POSITION
 ) -> list[str]:
     if insert is None:
         return original
@@ -196,9 +196,11 @@ def create_rating_tag(
         else:
             raise Exception("Invalid rating: " + post_item.post.rating)
 
+    raise Exception(f"Unexpected config type: {config.type}")
+
 
 def create_quality_tag(
-    post_item: DanbooruPostItem, config: Optional[QualityTagConfig]
+    post_item: DanbooruPostItem, config: QualityTagConfig | None
 ) -> list[str]:
     if config is None:
         return []

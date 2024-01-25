@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from typing import Optional, Literal, get_args
+from typing import Literal, get_args
 
 from scrape_config import (
     SearchFilterConfig,

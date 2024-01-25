@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pathlib import Path
 import requests
 from urllib import parse
@@ -56,12 +54,12 @@ def separate_person_tags(tags: list[str]):
 
 class DanbooruScraper:
     domain: AVAIABLE_DOMAINS
-    auth: Optional[AuthConfig]
+    auth: AuthConfig | None
 
     def __init__(
         self,
         domain: AVAIABLE_DOMAINS = "danbooru.donmai.us",
-        auth: Optional[AuthConfig] = None,
+        auth: AuthConfig | None = None,
     ) -> None:
         self.domain = domain
         self.auth = auth
@@ -209,7 +207,7 @@ class DanbooruPostItem(BaseModel):
 
 class ScrapeResultCache:
     output_path: str
-    save_state_path: Optional[str] = None
+    save_state_path: str | None = None
     caption: CaptionConfig | None = None
 
     items: list[DanbooruPostItem]
@@ -323,7 +321,7 @@ def download_image(
 def download_post_images(
     items: list[DanbooruPostItem],
     caches: list[ScrapeResultCache],
-    auth: Optional[AuthConfig],
+    auth: AuthConfig | None,
     pbar,
 ) -> None:
     for item, cache in zip(items, caches):

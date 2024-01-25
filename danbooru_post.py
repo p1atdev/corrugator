@@ -1,8 +1,5 @@
 from enum import Enum
 from pydantic import BaseModel
-from datetime import datetime
-
-from typing import List, Optional
 
 
 class FileEXT(str, Enum):
@@ -42,17 +39,17 @@ class MediaAsset(BaseModel):
     id: int
     created_at: str
     updated_at: str
-    md5: Optional[str] = None
+    md5: str | None = None
     file_ext: FileEXT
     file_size: int
     image_width: int
     image_height: int
-    duration: Optional[float] = None
+    duration: float | None = None
     status: Status
-    file_key: Optional[str] = None
+    file_key: str | None = None
     is_public: bool
     pixel_hash: str
-    variants: List[Variant] = []
+    variants: list[Variant] = []
 
 
 class Rating(str, Enum):
@@ -100,14 +97,14 @@ class DanbooruPost(BaseModel):
     tag_string_artist: str
     tag_string_meta: str
 
-    md5: Optional[str] = None
-    file_url: Optional[str] = None
-    large_file_url: Optional[str] = None
-    preview_file_url: Optional[str] = None
+    md5: str | None = None
+    file_url: str | None = None
+    large_file_url: str | None = None
+    preview_file_url: str | None = None
 
-    last_comment_bumped_at: Optional[str] = None
-    last_noted_at: Optional[str] = None
-    last_commented_at: Optional[str] = None
-    pixiv_id: Optional[int] = None
-    parent_id: Optional[int] = None
-    approver_id: Optional[int] = None
+    last_comment_bumped_at: str | None = None
+    last_noted_at: str | None = None
+    last_commented_at: str | None = None
+    pixiv_id: int | None = None
+    parent_id: int | None = None
+    approver_id: int | None = None
